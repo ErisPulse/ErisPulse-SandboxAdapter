@@ -30,3 +30,6 @@ enable = true
 2. 在网页中添加虚拟好友或群聊
 3. 选择一个聊天，发送消息
 4. 适配器会自动将消息转换为 OneBot12 标准事件并发送给模块
+
+## 网页界面功能
+![ErisPulse-SandboxAdapter](.github\image.png)
