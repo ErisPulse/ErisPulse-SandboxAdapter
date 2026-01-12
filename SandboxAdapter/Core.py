@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+import time
 from typing import Dict, List
 from fastapi import WebSocket, WebSocketDisconnect
 from ErisPulse import sdk
@@ -504,7 +505,7 @@ class SandboxAdapter(sdk.BaseAdapter):
                 "message": display_text,
                 "message_type_detail": message_type,
                 "message_segments": message_segments,
-                "timestamp": int(asyncio.get_event_loop().time())
+                "timestamp": int(time.time())
             }
 
             # 记录目标信息（私聊需要知道发给谁）
@@ -659,7 +660,7 @@ class SandboxAdapter(sdk.BaseAdapter):
             "user_id": message_data.get("user_id", ""),
             "user_name": message_data.get("user_name", ""),
             "message": message_data.get("message", ""),
-            "timestamp": int(asyncio.get_event_loop().time())
+            "timestamp": int(time.time())
         }
         
         # 添加消息段和消息类型详细信息
