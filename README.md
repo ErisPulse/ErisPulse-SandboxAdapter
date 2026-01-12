@@ -32,4 +32,4 @@ enable = true
 4. 适配器会自动将消息转换为 OneBot12 标准事件并发送给模块
 
 ## 网页界面功能
-![ErisPulse-SandboxAdapter](.github\image.png)
+![ErisPulse-SandboxAdapter](.github/image.png)
