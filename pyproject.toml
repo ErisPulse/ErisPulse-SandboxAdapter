@@ -1,0 +1,20 @@
+[project]
+name = "ErisPulse-SandboxAdapter"
+version = "1.0.0"
+description = "ErisPulse的沙箱适配器，提供网页界面用于调试和模拟消息"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { file = "LICENSE" }
+authors = [ { name = "ErisPulse Team" } ]
+dependencies = [
+    
+]
+
+[project.urls]
+"homepage" = "https://github.com/ErisPulse/ErisPulse-SandboxAdapter"
+
+[project.entry-points."erispulse.adapter"]
+sandbox = "SandboxAdapter:SandboxAdapter"
+
+[tool.setuptools]
+packages = ["SandboxAdapter"]
