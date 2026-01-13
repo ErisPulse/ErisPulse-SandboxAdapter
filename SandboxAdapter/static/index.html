@@ -1398,14 +1398,44 @@
                 case 'init':
                     friends = data.data.friends;
                     groups = data.data.groups;
-                    messages = data.data.messages;
                     selfId = data.data.self_id;
+                    messages = [];  // 初始不加载消息，按需加载
                     renderContactList();
+                    break;
+
+                case 'messages_loaded':
+                    // 按需加载的消息
+                    if (data.data.contact_id === (currentContact?.id)) {
+                        // 更新当前聊天的消息
+                        messages = data.data.messages;
+                        renderMessages();
+                    }
                     break;
                     
                 case 'message':
-                    messages.push(data.data);
-                    if (currentContact) {
+                    // 只添加属于当前聊天的消息
+                    const msgData = data.data;
+
+                    if (!currentContact) {
+                        return;
+                    }
+
+                    let shouldAdd = false;
+
+                    if (currentTab === 'friends' && msgData.message_type === 'private') {
+                        // 私聊：检查是否与当前联系人相关
+                        const isContactMessage = msgData.user_id === currentContact.id && msgData.target_id === selfId;
+                        const isBotMessage = msgData.user_id === selfId && msgData.target_id === currentContact.id;
+                        shouldAdd = isContactMessage || isBotMessage;
+                    }
+
+                    if (currentTab === 'groups' && msgData.message_type === 'group') {
+                        // 群聊：检查是否是当前群组
+                        shouldAdd = msgData.group_id === currentContact.id;
+                    }
+
+                    if (shouldAdd) {
+                        messages.push(msgData);
                         renderMessages();
                     }
                     break;
@@ -1471,10 +1501,23 @@
                 `;
 
                 item.addEventListener('click', () => {
+                    // 切换联系人
                     currentContact = contact;
                     renderContactList();
                     renderChatHeader();
-                    renderMessages();
+
+                    // 清空消息列表并显示加载状态
+                    chatMessages.innerHTML = '<div class="empty-state"><p>加载中...</p></div>';
+
+                    // 请求该联系人的消息
+                    ws.send(JSON.stringify({
+                        type: 'load_messages',
+                        data: {
+                            contact_id: contact.id,
+                            contact_type: currentTab === 'friends' ? 'private' : 'group'
+                        }
+                    }));
+
                     messageInput.disabled = false;
                     btnSend.disabled = false;
                 });
@@ -1504,39 +1547,7 @@
                 return;
             }
 
-            const contactMessages = messages.filter(m => {
-                // 根据当前标签页类型过滤消息
-                if (currentTab === 'friends') {
-                    // 好友聊天：只显示私聊消息
-                    const isPrivateMessage = m.message_type === 'private';
-
-                    if (!isPrivateMessage) {
-                        return false;
-                    }
-
-                    // 判断消息是否属于当前聊天
-                    const isFromContact = m.user_id === currentContact.id;  // 好友发送的消息
-                    const isFromBot = m.user_id === selfId;  // 机器人发送的消息
-
-                    if (isFromContact) {
-                        // 好友发送的消息，显示在这个好友的聊天中
-                        return true;
-                    }
-
-                    if (isFromBot) {
-                        // 机器人发送的消息，需要判断是发给谁的
-                        const targetId = m.target_id || m.group_id;
-                        return targetId === currentContact.id;
-                    }
-
-                    return false;
-                } else {
-                    // 群聊：只显示该群组的消息
-                    return m.group_id === currentContact.id;
-                }
-            });
-
-            if (contactMessages.length === 0) {
+            if (messages.length === 0) {
                 chatMessages.innerHTML = `
                     <div class="empty-state">
                         <h3>暂无消息</h3>
@@ -1547,7 +1558,7 @@
             }
 
             chatMessages.innerHTML = '';
-            contactMessages.forEach(msg => {
+            messages.forEach(msg => {
                 const isSelf = msg.user_id === selfId;
                 const messageDiv = document.createElement('div');
                 messageDiv.className = `message ${isSelf ? 'sent' : 'received'}`;

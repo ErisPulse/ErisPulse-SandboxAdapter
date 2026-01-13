@@ -634,13 +634,12 @@ class SandboxAdapter(sdk.BaseAdapter):
         self._web_connections.append(websocket)
         self.logger.info("网页客户端已连接")
 
-        # 发送初始数据（清理后再发送）
+        # 发送初始数据（清理后再发送，不包含所有消息，只发送联系人和self_id）
         initial_data = {
             "type": "init",
             "data": {
                 "friends": list(self.friends.values()),
                 "groups": list(self.groups.values()),
-                "messages": self.messages,
                 "self_id": self.self_id
             }
         }
@@ -688,12 +687,53 @@ class SandboxAdapter(sdk.BaseAdapter):
             elif msg_type == "clear_messages":
                 # 清空消息记录
                 self.messages.clear()
-                
+
                 # 持久化数据
                 self._save_persisted_data()
-                
+
                 await self._broadcast_to_web({"type": "messages_cleared"})
-        
+
+            elif msg_type == "load_messages":
+                # 按需加载消息
+                contact_data = data.get("data", {})
+                contact_id = contact_data.get("contact_id", "")
+                contact_type = contact_data.get("contact_type", "private")  # private 或 group
+
+                # 过滤对应聊天的消息
+                filtered_messages = []
+                for msg in self.messages:
+                    if contact_type == "private":
+                        # 私聊消息：只显示私聊消息
+                        if msg.get("message_type") != "private":
+                            continue
+
+                        # 判断消息是否属于当前聊天
+                        is_from_contact = msg.get("user_id") == contact_id  # 联系人发送的消息
+                        is_from_bot = msg.get("user_id") == self.self_id  # 机器人发送的消息
+
+                        if is_from_contact:
+                            # 联系人发送的消息，显示在这个联系人的聊天中
+                            filtered_messages.append(msg)
+                        elif is_from_bot:
+                            # 机器人发送的消息，需要判断是发给谁的
+                            target_id = msg.get("target_id") or msg.get("group_id")
+                            if target_id == contact_id:
+                                filtered_messages.append(msg)
+                    else:
+                        # 群聊：只显示该群组的消息
+                        if msg.get("group_id") == contact_id:
+                            filtered_messages.append(msg)
+
+                # 发送过滤后的消息
+                await self._broadcast_to_web({
+                    "type": "messages_loaded",
+                    "data": {
+                        "contact_id": contact_id,
+                        "contact_type": contact_type,
+                        "messages": filtered_messages
+                    }
+                })
+
         except json.JSONDecodeError:
             self.logger.error(f"JSON 解析失败: {raw_msg}")
         except Exception as e:
