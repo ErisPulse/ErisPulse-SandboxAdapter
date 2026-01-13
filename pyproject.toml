@@ -1,6 +1,6 @@
 [project]
 name = "ErisPulse-SandboxAdapter"
-version = "1.0.2"
+version = "1.0.3"
 description = "ErisPulse的沙箱适配器，提供网页界面用于调试和模拟消息"
 readme = "README.md"
 requires-python = ">=3.10"

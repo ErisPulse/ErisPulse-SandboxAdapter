@@ -298,7 +298,6 @@ class SandboxAdapter(sdk.BaseAdapter):
         if not config:
             default_config = {
                 "self_id": "sandbox_bot",
-                "web_port": 8000,
                 "enable": True
             }
             self.sdk.config.setConfig("SandboxAdapter", default_config)
