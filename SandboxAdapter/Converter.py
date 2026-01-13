@@ -48,37 +48,86 @@ class SandboxConverter:
         """处理消息事件"""
         message_type = raw_event.get("message_type", "private")
         detail_type = "private" if message_type == "private" else "group"
-        
+
         # 解析消息内容
         message = raw_event.get("message", "")
-        
+
         # 优先使用消息段数组（如果存在）
         if "message_segments" in raw_event:
             message_segments = raw_event.get("message_segments", [])
+            # 确保消息段是可序列化的
+            message_segments = self._clean_message_segments(message_segments)
         else:
             # 否则创建文本消息段
-            message_segments = [{"type": "text", "data": {"text": message}}]
-        
+            message_segments = [{"type": "text", "data": {"text": str(message)}}]
+
         base_event.update({
             "type": "message",
             "detail_type": detail_type,
             "message_id": str(uuid.uuid4()),
             "message": message_segments,
-            "alt_message": message,
-            "user_id": raw_event.get("user_id", ""),
+            "alt_message": str(message),
+            "user_id": str(raw_event.get("user_id", "")),
         })
-        
+
         # 添加发送者信息
         if "user_name" in raw_event:
-            base_event["user_nickname"] = raw_event["user_name"]
-        
+            base_event["user_nickname"] = str(raw_event["user_name"])
+
         # 群聊消息
         if detail_type == "group":
-            base_event["group_id"] = raw_event.get("group_id", "")
+            base_event["group_id"] = str(raw_event.get("group_id", ""))
             if "group_name" in raw_event:
-                base_event["group_name"] = raw_event["group_name"]
-        
+                base_event["group_name"] = str(raw_event["group_name"])
+
         return base_event
+
+    def _clean_message_segments(self, segments):
+        """清理消息段，确保所有数据都是可序列化的"""
+        if not isinstance(segments, list):
+            return []
+
+        cleaned_segments = []
+        for segment in segments:
+            if not isinstance(segment, dict):
+                continue
+
+            segment_type = segment.get("type", "text")
+            segment_data = segment.get("data", {})
+
+            # 确保data是字典类型
+            if not isinstance(segment_data, dict):
+                segment_data = {}
+
+            # 清理数据中的所有值
+            cleaned_data = {}
+            for key, value in segment_data.items():
+                if isinstance(value, bytes):
+                    # 媒体文件字段需要转换为base64
+                    if segment_type in ['image', 'video', 'record'] and key == 'file':
+                        import base64
+                        try:
+                            cleaned_data[key] = base64.b64encode(value).decode('utf-8')
+                        except Exception:
+                            cleaned_data[key] = ''
+                    else:
+                        # 其他bytes字段尝试解码为UTF-8
+                        try:
+                            cleaned_data[key] = value.decode('utf-8')
+                        except Exception:
+                            cleaned_data[key] = ''
+                elif isinstance(value, (str, int, float, bool, type(None))):
+                    cleaned_data[key] = value
+                else:
+                    # 对于其他类型，转换为字符串
+                    cleaned_data[key] = str(value)
+
+            cleaned_segments.append({
+                "type": str(segment_type),
+                "data": cleaned_data
+            })
+
+        return cleaned_segments
     
     def _handle_notice(self, raw_event: Dict, base_event: Dict) -> Dict:
         """处理通知事件"""

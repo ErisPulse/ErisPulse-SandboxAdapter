@@ -324,27 +324,68 @@ class SandboxAdapter(sdk.BaseAdapter):
             # 加载消息数据
             persisted_messages = self.storage.get("sandbox:messages", [])
             if persisted_messages:
-                self.messages.extend(persisted_messages)
-                self.logger.info(f"从存储加载了 {len(self.messages)} 条消息")
+                # 清理加载的消息数据
+                cleaned_messages = self._clean_for_serialization(persisted_messages)
+                self.messages.extend(cleaned_messages)
+                self.logger.info(f"从存储加载了 {len(cleaned_messages)} 条消息")
         except Exception as e:
             self.logger.warning(f"加载数据失败: {e}")
     
+    def _clean_for_serialization(self, data):
+        """清理数据，确保所有字段都是JSON可序列化的"""
+        if isinstance(data, (str, int, float, bool, type(None))):
+            return data
+        elif isinstance(data, bytes):
+            # 尝试解码bytes为UTF-8字符串
+            try:
+                return data.decode('utf-8')
+            except UnicodeDecodeError:
+                # 如果是二进制数据（图片、视频等），转换为base64
+                import base64
+                try:
+                    return base64.b64encode(data).decode('utf-8')
+                except Exception:
+                    return ''
+        elif isinstance(data, dict):
+            # 特殊处理消息段：检测媒体类型并转换base64
+            if 'type' in data and 'data' in data:
+                segment_type = data['type']
+                segment_data = data['data']
+                if segment_type in ['image', 'video', 'record']:
+                    # 图片/视频/语音消息段
+                    if 'file' in segment_data and isinstance(segment_data['file'], bytes):
+                        import base64
+                        try:
+                            segment_data['file'] = base64.b64encode(segment_data['file']).decode('utf-8')
+                        except Exception:
+                            segment_data['file'] = ''
+            return {key: self._clean_for_serialization(value) for key, value in data.items()}
+        elif isinstance(data, list):
+            return [self._clean_for_serialization(item) for item in data]
+        else:
+            # 对于其他类型，转换为字符串
+            return str(data)
+
     def _save_persisted_data(self):
         """保存数据到持久化存储"""
         try:
             # 保存好友数据
-            self.storage.set("sandbox:friends", self.friends)
-            
+            self.storage.set("sandbox:friends", self._clean_for_serialization(self.friends))
+
             # 保存群组数据
-            self.storage.set("sandbox:groups", self.groups)
-            
+            self.storage.set("sandbox:groups", self._clean_for_serialization(self.groups))
+
             # 保存消息数据（只保存最近 1000 条）
             messages_to_save = self.messages[-1000:] if len(self.messages) > 1000 else self.messages
+            # 清理消息数据，确保可以序列化
+            messages_to_save = self._clean_for_serialization(messages_to_save)
             self.storage.set("sandbox:messages", messages_to_save)
 
             self.logger.info(f"保存了 {len(messages_to_save)} 条消息")
         except Exception as e:
             self.logger.error(f"保存数据失败: {e}")
+            import traceback
+            self.logger.error(f"详细错误: {traceback.format_exc()}")
     
     def _init_default_data(self):
         """初始化默认数据"""
@@ -517,9 +558,12 @@ class SandboxAdapter(sdk.BaseAdapter):
                 message["group_id"] = target_id
                 message["group_name"] = self.groups.get(target_id, {}).get("name", "")
 
+            # 清理消息数据，确保可以序列化
+            message = self._clean_for_serialization(message)
+
             # 保存消息记录
             self.messages.append(message)
-            
+
             # 持久化数据
             self._save_persisted_data()
 
@@ -536,7 +580,7 @@ class SandboxAdapter(sdk.BaseAdapter):
                 "message": "消息发送成功",
                 "self": {"user_id": self.self_id}
             }
-        
+
         elif endpoint == "clear_all_data":
             # 清空所有数据（包括好友、群组和消息）
             self.friends.clear()
@@ -566,17 +610,20 @@ class SandboxAdapter(sdk.BaseAdapter):
         """向所有连接的网页客户端广播消息"""
         if not self._web_connections:
             return
-        
-        message = json.dumps(data, ensure_ascii=False)
+
+        # 清理数据，确保可以序列化
+        cleaned_data = self._clean_for_serialization(data)
+
+        message = json.dumps(cleaned_data, ensure_ascii=False)
         disconnected = []
-        
+
         for ws in self._web_connections:
             try:
                 await ws.send_text(message)
             except Exception as e:
                 self.logger.warning(f"向网页发送消息失败: {e}")
                 disconnected.append(ws)
-        
+
         # 清理断开的连接
         for ws in disconnected:
             if ws in self._web_connections:
@@ -586,9 +633,9 @@ class SandboxAdapter(sdk.BaseAdapter):
         """WebSocket 处理器"""
         self._web_connections.append(websocket)
         self.logger.info("网页客户端已连接")
-        
-        # 发送初始数据
-        await websocket.send_text(json.dumps({
+
+        # 发送初始数据（清理后再发送）
+        initial_data = {
             "type": "init",
             "data": {
                 "friends": list(self.friends.values()),
@@ -596,8 +643,10 @@ class SandboxAdapter(sdk.BaseAdapter):
                 "messages": self.messages,
                 "self_id": self.self_id
             }
-        }, ensure_ascii=False))
-        
+        }
+        cleaned_data = self._clean_for_serialization(initial_data)
+        await websocket.send_text(json.dumps(cleaned_data, ensure_ascii=False))
+
         try:
             while True:
                 data = await websocket.receive_text()

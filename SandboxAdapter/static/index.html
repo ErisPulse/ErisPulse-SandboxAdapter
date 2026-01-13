@@ -359,6 +359,8 @@
             line-height: 1.6;
             word-break: break-word;
             white-space: pre-wrap;
+            max-width: 100%;
+            overflow: hidden;
         }
 
         .message-segment {
@@ -373,10 +375,7 @@
             margin: 4px 0;
             cursor: pointer;
             transition: transform 0.2s;
-        }
-
-        .message-segment-image:hover {
-            transform: scale(1.02);
+            display: block;
         }
 
         .message-segment-face {
@@ -459,6 +458,7 @@
             font-size: 13px;
             max-width: 100%;
             overflow-x: auto;
+            word-break: break-all;
         }
 
         .message-segment-record {
@@ -500,6 +500,7 @@
             border-radius: 8px;
             margin: 4px 0;
             cursor: pointer;
+            display: block;
         }
 
         .message-segment-dice,
@@ -1018,6 +1019,81 @@
             font-size: 14px;
             opacity: 0.7;
         }
+
+        /* 图片查看模态框 */
+        .image-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(4px);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 20px;
+        }
+
+        .image-modal.show {
+            display: flex;
+        }
+
+        .image-modal-content {
+            max-width: 95vw;
+            max-height: 95vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .image-modal-image {
+            max-width: 100%;
+            max-height: calc(95vh - 80px);
+            border-radius: 12px;
+            cursor: zoom-in;
+            transition: transform 0.2s;
+        }
+
+        .image-modal-image:hover {
+            transform: scale(1.02);
+        }
+
+        .image-modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-modal-close:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: rotate(90deg);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1100,7 +1176,15 @@
             </div>
         </div>
     </div>
-    
+
+    <!-- 图片查看模态框 -->
+    <div class="image-modal" id="imageModal">
+        <div class="image-modal-close" id="imageModalClose">×</div>
+        <div class="image-modal-content">
+            <img src="" alt="预览图片" class="image-modal-image" id="imageModalImage">
+        </div>
+    </div>
+
     <script>
         // WebSocket 连接
         let ws = null;
@@ -1123,6 +1207,9 @@
         const btnSend = document.getElementById('btnSend');
         const btnAdd = document.getElementById('btnAdd');
         const addModal = document.getElementById('addModal');
+        const imageModal = document.getElementById('imageModal');
+        const imageModalImage = document.getElementById('imageModalImage');
+        const imageModalClose = document.getElementById('imageModalClose');
         const modalTitle = document.getElementById('modalTitle');
         const contactName = document.getElementById('contactName');
         const contactId = document.getElementById('contactId');
@@ -1131,7 +1218,37 @@
         const dropdownButton = document.getElementById('dropdownButton');
         const dropdownMenu = document.getElementById('dropdownMenu');
         const selectedTypeText = document.getElementById('selectedTypeText');
-        
+
+        // 图片模态框功能
+        function openImageModal(imageUrl) {
+            imageModalImage.src = imageUrl;
+            imageModal.classList.add('show');
+            document.body.style.overflow = 'hidden'; // 禁止背景滚动
+        }
+
+        function closeImageModal() {
+            imageModal.classList.remove('show');
+            imageModalImage.src = '';
+            document.body.style.overflow = ''; // 恢复背景滚动
+        }
+
+        // 点击关闭按钮关闭模态框
+        imageModalClose.addEventListener('click', closeImageModal);
+
+        // 点击模态框背景关闭
+        imageModal.addEventListener('click', (e) => {
+            if (e.target === imageModal) {
+                closeImageModal();
+            }
+        });
+
+        // ESC键关闭模态框
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && imageModal.classList.contains('show')) {
+                closeImageModal();
+            }
+        });
+
         // 下拉菜单交互
         dropdownButton.addEventListener('click', () => {
             const isShow = !dropdownMenu.classList.contains('show');
@@ -1478,8 +1595,14 @@
                     return `<span class="message-segment">${escapeHtml(data.text || '')}</span>`;
                 
                 case 'image':
-                    const imageUrl = data.file || data.url || '';
-                    return `<img src="${escapeHtml(imageUrl)}" alt="图片" class="message-segment-segment-image" onclick="window.open('${escapeHtml(imageUrl)}')">`;
+                    let imageUrl = data.file || data.url || '';
+                    // 检测是否是base64数据
+                    const isBase64 = imageUrl.startsWith('data:image') || imageUrl.startsWith('iVBORw0KGgo') || imageUrl.match(/^[A-Za-z0-9+/]+=*$/);
+                    if (isBase64 && !imageUrl.startsWith('data:image')) {
+                        // 如果是纯base64字符串，添加data URI前缀
+                        imageUrl = `data:image/png;base64,${imageUrl}`;
+                    }
+                    return `<img src="${escapeHtml(imageUrl)}" alt="图片" class="message-segment-image" onclick="openImageModal('${escapeHtml(imageUrl)}')">`;
                 
                 case 'face':
                     const faceId = data.id || '';
@@ -1500,7 +1623,13 @@
                     return renderRecordSegment(data);
                 
                 case 'video':
-                    const videoUrl = data.file || data.url || '';
+                    let videoUrl = data.file || data.url || '';
+                    // 检测是否是base64数据
+                    const isVideoBase64 = videoUrl.startsWith('data:video') || videoUrl.match(/^[A-Za-z0-9+/]+=*$/);
+                    if (isVideoBase64 && !videoUrl.startsWith('data:video')) {
+                        // 如果是纯base64字符串，添加data URI前缀（假设是mp4）
+                        videoUrl = `data:video/mp4;base64,${videoUrl}`;
+                    }
                     return `<video src="${escapeHtml(videoUrl)}" controls class="message-segment-video"></video>`;
                 
                 case 'dice':
@@ -1624,79 +1753,84 @@
             // 根据消息类型构建消息数据
             let messageContent = message;
             let messageType = currentMessageType;
-            
+
             // 构建消息段数组（OneBot12 格式）
             let messageSegments = [];
-            
-            switch (currentMessageType) {
-                case 'text':
-                    messageSegments = [{"type": "text", "data": {"text": message}}];
-                    break;
-                case 'image':
-                    messageSegments = [{"type": "image", "data": {"file": message}}];
-                    break;
-                case 'record':
-                    messageSegments = [{"type": "record", "data": {"file": message}}];
-                    break;
-                case 'video':
-                    messageSegments = [{"type": "video", "data": {"file": message}}];
-                    break;
-                case 'at':
-                    messageSegments = [
-                        {"type": "mention", "data": {"user_id": message}},
-                        {"type": "text", "data": {"text": " "}}
-                    ];
-                    break;
-                case 'face':
-                    messageSegments = [{"type": "face", "data": {"id": message}}];
-                    break;
-                case 'mention_all':
-                    messageSegments = [
-                        {"type": "mention_all", "data": {}},
-                        {"type": "text", "data": {"text": " " + message}}
-                    ];
-                    break;
-                case 'reply':
-                    messageSegments = [
-                        {"type": "reply", "data": {"message_id": message}},
-                        {"type": "text", "data": {"text": " "}}
-                    ];
-                    break;
-                case 'dice':
-                    messageSegments = [{"type": "dice", "data": {}}];
-                    break;
-                case 'rps':
-                    messageSegments = [{"type": "rps", "data": {}}];
-                    break;
-                case 'poke':
-                    messageSegments = [{"type": "poke", "data": {"user_id": message, "type": "poke"}}];
-                    break;
-                case 'location':
-                    const locationData = JSON.parse(message);
-                    messageSegments = [{"type": "location", "data": locationData}];
-                    break;
-                case 'music':
-                    const musicData = JSON.parse(message);
-                    messageSegments = [{"type": "music", "data": musicData}];
-                    break;
-                case 'share':
-                    const shareData = JSON.parse(message);
-                    messageSegments = [{"type": "share", "data": shareData}];
-                    break;
-                case 'html':
-                    messageSegments = [{"type": "html", "data": {"data": message}}];
-                    break;
-                case 'markdown':
-                    messageSegments = [{"type": "markdown", "data": {"data": message}}];
-                    break;
-                case 'json':
-                    messageSegments = [{"type": "json", "data": {"data": message}}];
-                    break;
-                case 'xml':
-                    messageSegments = [{"type": "xml", "data": {"data": message}}];
-                    break;
-                default:
-                    messageSegments = [{"type": "text", "data": {"text": message}}];
+
+            try {
+                switch (currentMessageType) {
+                    case 'text':
+                        messageSegments = [{"type": "text", "data": {"text": message}}];
+                        break;
+                    case 'image':
+                        messageSegments = [{"type": "image", "data": {"file": message}}];
+                        break;
+                    case 'record':
+                        messageSegments = [{"type": "record", "data": {"file": message}}];
+                        break;
+                    case 'video':
+                        messageSegments = [{"type": "video", "data": {"file": message}}];
+                        break;
+                    case 'at':
+                        messageSegments = [
+                            {"type": "mention", "data": {"user_id": message}},
+                            {"type": "text", "data": {"text": " "}}
+                        ];
+                        break;
+                    case 'face':
+                        messageSegments = [{"type": "face", "data": {"id": message}}];
+                        break;
+                    case 'mention_all':
+                        messageSegments = [
+                            {"type": "mention_all", "data": {}},
+                            {"type": "text", "data": {"text": " " + message}}
+                        ];
+                        break;
+                    case 'reply':
+                        messageSegments = [
+                            {"type": "reply", "data": {"message_id": message}},
+                            {"type": "text", "data": {"text": " "}}
+                        ];
+                        break;
+                    case 'dice':
+                        messageSegments = [{"type": "dice", "data": {}}];
+                        break;
+                    case 'rps':
+                        messageSegments = [{"type": "rps", "data": {}}];
+                        break;
+                    case 'poke':
+                        messageSegments = [{"type": "poke", "data": {"user_id": message, "type": "poke"}}];
+                        break;
+                    case 'location':
+                        const locationData = JSON.parse(message);
+                        messageSegments = [{"type": "location", "data": locationData}];
+                        break;
+                    case 'music':
+                        const musicData = JSON.parse(message);
+                        messageSegments = [{"type": "music", "data": musicData}];
+                        break;
+                    case 'share':
+                        const shareData = JSON.parse(message);
+                        messageSegments = [{"type": "share", "data": shareData}];
+                        break;
+                    case 'html':
+                        messageSegments = [{"type": "html", "data": {"data": message}}];
+                        break;
+                    case 'markdown':
+                        messageSegments = [{"type": "markdown", "data": {"data": message}}];
+                        break;
+                    case 'json':
+                        messageSegments = [{"type": "json", "data": {"data": message}}];
+                        break;
+                    case 'xml':
+                        messageSegments = [{"type": "xml", "data": {"data": message}}];
+                        break;
+                    default:
+                        messageSegments = [{"type": "text", "data": {"text": message}}];
+                }
+            } catch (e) {
+                alert('消息格式错误: ' + e.message);
+                return;
             }
 
             const messageData = {
