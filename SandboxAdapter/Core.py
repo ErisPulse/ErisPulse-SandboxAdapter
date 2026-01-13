@@ -144,6 +144,10 @@ class SandboxAdapter(sdk.BaseAdapter):
                 )
             )
         
+        def Voice(self, file: str):
+            """发送语音消息（Record的别名）"""
+            return self.Record(file)
+        
         def Video(self, file: str):
             """发送视频消息"""
             return asyncio.create_task(
