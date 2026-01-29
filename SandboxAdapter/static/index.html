@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ErisPulse 沙箱</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -830,12 +831,166 @@
 
         .message-segment-markdown {
             padding: 8px 10px;
-            background-color: #e3f2fd;
+            background-color: rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+            margin: 2px 0;
+            font-size: 14px;
+            line-height: 1.5;
+            overflow-x: auto;
+            word-wrap: break-word;
+        }
+
+        .message.received .message-segment-markdown {
+            background-color: rgba(255, 255, 255, 0.12);
+            color: #ffffff;
+        }
+
+        .message.sent .message-segment-markdown {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-content h1,
+        .markdown-content h2,
+        .markdown-content h3,
+        .markdown-content h4,
+        .markdown-content h5,
+        .markdown-content h6 {
+            margin: 6px 0 4px 0;
+            font-weight: 600;
+            line-height: 1.3;
+        }
+
+        .markdown-content h1 {
+            font-size: 1.4em;
+            border-bottom: 1px solid currentColor;
+            padding-bottom: 4px;
+            opacity: 0.85;
+        }
+
+        .markdown-content h2 {
+            font-size: 1.25em;
+        }
+
+        .markdown-content h3 {
+            font-size: 1.15em;
+        }
+
+        .markdown-content h4 {
+            font-size: 1.1em;
+        }
+
+        .markdown-content p {
+            margin: 4px 0;
+        }
+
+        .markdown-content ul,
+        .markdown-content ol {
+            margin: 4px 0;
+            padding-left: 20px;
+        }
+
+        .markdown-content ul {
+            list-style-type: disc;
+        }
+
+        .markdown-content ol {
+            list-style-type: decimal;
+        }
+
+        .markdown-content li {
+            margin: 2px 0;
+        }
+
+        .markdown-content code {
+            font-family: 'Courier New', monospace;
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 1px 4px;
+            border-radius: 2px;
+            font-size: 0.88em;
+        }
+
+        .message.received .markdown-content code {
+            background-color: rgba(0, 0, 0, 0.3);
+        }
+
+        .markdown-content pre {
+            background-color: rgba(0, 0, 0, 0.15);
+            padding: 8px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 6px 0;
+        }
+
+        .markdown-content pre code {
+            background-color: transparent;
+            padding: 0;
+            border-radius: 0;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .message.received .markdown-content pre {
+            background-color: rgba(0, 0, 0, 0.25);
+        }
+
+        .markdown-content blockquote {
+            border-left: 3px solid var(--md-sys-color-primary);
+            padding-left: 10px;
+            margin: 6px 0;
+            opacity: 0.85;
+        }
+
+        .markdown-content blockquote p {
+            margin: 2px 0;
+        }
+
+        .markdown-content a {
+            color: var(--md-sys-color-primary);
+            text-decoration: underline;
+        }
+
+        .message.received .markdown-content a {
+            color: #bbdefb;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 6px 0;
+        }
+
+        .markdown-content th,
+        .markdown-content td {
+            border: 1px solid rgba(128, 128, 128, 0.3);
+            padding: 4px 8px;
+            text-align: left;
+        }
+
+        .markdown-content th {
+            background-color: rgba(0, 0, 0, 0.1);
+            font-weight: 600;
+        }
+
+        .markdown-content hr {
+            border: none;
+            border-top: 1px solid rgba(128, 128, 128, 0.3);
+            margin: 8px 0;
+        }
+
+        .markdown-content img {
+            max-width: 100%;
+            height: auto;
             border-radius: 4px;
             margin: 4px 0;
-            font-family: 'Courier New', monospace;
-            font-size: 13px;
-            white-space: pre-wrap;
+        }
+
+        .markdown-content strong {
+            font-weight: 700;
+        }
+
+        .markdown-content em {
+            font-style: italic;
         }
 
         .message-time {
@@ -2216,7 +2371,10 @@
                     return `<div class="message-segment-html"><div class="message-segment-html-content">${escapeHtml(data.data || '')}</div></div>`;
                 
                 case 'markdown':
-                    return `<div class="message-segment-markdown">${escapeHtml(data.data || '')}</div>`;
+                    const markdownText = data.data || '';
+                    // 使用 marked 库渲染 Markdown
+                    const renderedMarkdown = marked.parse(markdownText);
+                    return `<div class="message-segment-markdown"><div class="markdown-content">${renderedMarkdown}</div></div>`;
                 
                 case 'json':
                     const jsonStr = typeof data.data === 'string' ? data.data : JSON.stringify(data.data, null, 2);
