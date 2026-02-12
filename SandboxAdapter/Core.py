@@ -15,102 +15,195 @@ class SandboxAdapter(sdk.BaseAdapter):
     class Send(sdk.BaseAdapter.Send):
         """消息发送DSL实现"""
         
+        # 方法名映射表（全小写 -> 实际方法名）
+        _METHOD_MAP = {
+            # 消息发送方法
+            "text": "Text",
+            "image": "Image",
+            "recall": "Recall",
+            "raw_ob12": "Raw_ob12",
+            # 链式修饰方法
+            "at": "At",
+            "atall": "AtAll",
+            "reply": "Reply",
+        }
+        
+        def __init__(self, adapter, target_type=None, target_id=None, account_id=None):
+            super().__init__(adapter, target_type, target_id, account_id)
+            self._at_user_ids = []       # @的用户列表
+            self._reply_message_id = None # 回复的消息ID
+            self._at_all = False         # 是否@全体
+        
+        def __getattr__(self, name):
+            """
+            处理未定义的发送方法（支持大小写不敏感）
+            
+            当调用不存在的消息类型方法时：
+            1. 通过映射表查找对应的方法
+            2. 如果找到则调用该方法
+            3. 如果找不到，则发送文本提示不支持
+            """
+            name_lower = name.lower()
+            
+            # 查找映射
+            if name_lower in self._METHOD_MAP:
+                actual_method_name = self._METHOD_MAP[name_lower]
+                return getattr(self, actual_method_name)
+            
+            # 方法不存在，返回文本提示
+            def unsupported_method(*args, **kwargs):
+                # 格式化参数信息
+                params_info = []
+                for i, arg in enumerate(args):
+                    if isinstance(arg, bytes):
+                        params_info.append(f"args[{i}]: <bytes: {len(arg)} bytes>")
+                    else:
+                        params_info.append(f"args[{i}]: {repr(arg)[:100]}")
+                
+                for k, v in kwargs.items():
+                    if isinstance(v, bytes):
+                        params_info.append(f"{k}: <bytes: {len(v)} bytes>")
+                    else:
+                        params_info.append(f"{k}: {repr(v)[:100]}")
+                
+                params_str = ", ".join(params_info)
+                error_msg = f"[不支持的发送类型] 方法名: {name}, 参数: [{params_str}]"
+                
+                return self.Text(error_msg)
+            
+            return unsupported_method
+        
         def Text(self, text: str):
             """发送文本消息"""
-            return asyncio.create_task(
+            task = asyncio.create_task(
                 self._adapter.call_api(
                     endpoint="send_msg",
                     target_type=self._target_type,
                     target_id=self._target_id,
                     message_type="text",
-                    content=text
+                    content=text,
+                    at_user_ids=self._at_user_ids,
+                    at_all=self._at_all,
+                    reply_message_id=self._reply_message_id
                 )
             )
+            self._reset_modifiers()
+            return task
         
         def Image(self, file: str, summary: str = None):
             """发送图片消息"""
-            return asyncio.create_task(
+            task = asyncio.create_task(
                 self._adapter.call_api(
                     endpoint="send_msg",
                     target_type=self._target_type,
                     target_id=self._target_id,
                     message_type="image",
                     content=file,
-                    summary=summary
+                    summary=summary,
+                    at_user_ids=self._at_user_ids,
+                    at_all=self._at_all,
+                    reply_message_id=self._reply_message_id
                 )
             )
+            self._reset_modifiers()
+            return task
         
         def Face(self, face_id: int):
             """发送表情消息"""
-            return asyncio.create_task(
+            task = asyncio.create_task(
                 self._adapter.call_api(
                     endpoint="send_msg",
                     target_type=self._target_type,
                     target_id=self._target_id,
                     message_type="face",
-                    content=str(face_id)
+                    content=str(face_id),
+                    at_user_ids=self._at_user_ids,
+                    at_all=self._at_all,
+                    reply_message_id=self._reply_message_id
                 )
             )
+            self._reset_modifiers()
+            return task
         
         def At(self, user_id: str):
-            """发送@消息"""
-            return asyncio.create_task(
-                self._adapter.call_api(
-                    endpoint="send_msg",
-                    target_type=self._target_type,
-                    target_id=self._target_id,
-                    message_type="at",
-                    content=user_id
-                )
-            )
+            """@用户（可多次调用，链式修饰方法）"""
+            self._at_user_ids.append(user_id)
+            return self
         
         def AtAll(self):
-            """发送@全体成员消息"""
-            return asyncio.create_task(
-                self._adapter.call_api(
-                    endpoint="send_msg",
-                    target_type=self._target_type,
-                    target_id=self._target_id,
-                    message_type="mention_all",
-                    content=""
-                )
-            )
+            """@全体成员（链式修饰方法）"""
+            self._at_all = True
+            return self
         
         def Reply(self, message_id: str):
-            """发送回复消息"""
-            return asyncio.create_task(
+            """回复消息（链式修饰方法）"""
+            self._reply_message_id = message_id
+            return self
+        
+        def Recall(self, message_id: str):
+            """撤回消息"""
+            task = asyncio.create_task(
                 self._adapter.call_api(
                     endpoint="send_msg",
                     target_type=self._target_type,
                     target_id=self._target_id,
-                    message_type="reply",
-                    content=message_id
+                    message_type="recall",
+                    content=f"撤回消息 {message_id}"
                 )
             )
+            self._reset_modifiers()
+            return task
+        
+        def Raw_ob12(self, message):
+            """发送原始 OneBot12 格式的消息段"""
+            task = asyncio.create_task(
+                self._adapter.call_api(
+                    endpoint="send_msg",
+                    target_type=self._target_type,
+                    target_id=self._target_id,
+                    message_type="raw_ob12",
+                    content=message,
+                    at_user_ids=self._at_user_ids,
+                    at_all=self._at_all,
+                    reply_message_id=self._reply_message_id
+                )
+            )
+            self._reset_modifiers()
+            return task
         
         def Json(self, json_data: str):
             """发送JSON消息"""
-            return asyncio.create_task(
+            task = asyncio.create_task(
                 self._adapter.call_api(
                     endpoint="send_msg",
                     target_type=self._target_type,
                     target_id=self._target_id,
                     message_type="json",
-                    content=json_data
+                    content=json_data,
+                    at_user_ids=self._at_user_ids,
+                    at_all=self._at_all,
+                    reply_message_id=self._reply_message_id
                 )
             )
+            self._reset_modifiers()
+            return task
         
         def Xml(self, xml_data: str):
             """发送XML消息"""
-            return asyncio.create_task(
+            task = asyncio.create_task(
                 self._adapter.call_api(
                     endpoint="send_msg",
                     target_type=self._target_type,
                     target_id=self._target_id,
                     message_type="xml",
-                    content=xml_data
+                    content=xml_data,
+                    at_user_ids=self._at_user_ids,
+                    at_all=self._at_all,
+                    reply_message_id=self._reply_message_id
                 )
             )
+            self._reset_modifiers()
+            return task
         
         def Music(self, platform: str, id: str, title: str = None):
             """发送音乐分享消息"""
@@ -119,30 +212,40 @@ class SandboxAdapter(sdk.BaseAdapter):
                 "url": f"https://music.163.com/song/media/outer/url?id={id}.mp3",
                 "audio": f"https://music.163.com/song/media/outer/url?id={id}.mp3",
                 "title": title or f"音乐 {id}",
-                "image": "https://webstatic.mihoyo.com/upload/static-resource/2022/02/23/6c7839055a7b6e3d8d8d8d8d8d8d8d8d_6966302954083748595.png"
+                "image": "https://webstatic.mihoyo.com/upload/static-resource/2022/02/23/6c7839055a7b6e3d8d8d8d8d8d8d8d_6966302954083748595.png"
             }
-            return asyncio.create_task(
+            task = asyncio.create_task(
                 self._adapter.call_api(
                     endpoint="send_msg",
                     target_type=self._target_type,
                     target_id=self._target_id,
                     message_type="music",
-                    content=music_data
+                    content=music_data,
+                    at_user_ids=self._at_user_ids,
+                    at_all=self._at_all,
+                    reply_message_id=self._reply_message_id
                 )
             )
+            self._reset_modifiers()
+            return task
         
         def Record(self, file: str, magic: bool = False):
             """发送语音消息"""
-            return asyncio.create_task(
+            task = asyncio.create_task(
                 self._adapter.call_api(
                     endpoint="send_msg",
                     target_type=self._target_type,
                     target_id=self._target_id,
                     message_type="record",
                     content=file,
-                    magic=magic
+                    magic=magic,
+                    at_user_ids=self._at_user_ids,
+                    at_all=self._at_all,
+                    reply_message_id=self._reply_message_id
                 )
             )
+            self._reset_modifiers()
+            return task
         
         def Voice(self, file: str):
             """发送语音消息（Record的别名）"""
@@ -150,63 +253,88 @@ class SandboxAdapter(sdk.BaseAdapter):
         
         def Video(self, file: str):
             """发送视频消息"""
-            return asyncio.create_task(
+            task = asyncio.create_task(
                 self._adapter.call_api(
                     endpoint="send_msg",
                     target_type=self._target_type,
                     target_id=self._target_id,
                     message_type="video",
-                    content=file
+                    content=file,
+                    at_user_ids=self._at_user_ids,
+                    at_all=self._at_all,
+                    reply_message_id=self._reply_message_id
                 )
             )
+            self._reset_modifiers()
+            return task
         
         def Html(self, html_data: str):
             """发送HTML消息"""
-            return asyncio.create_task(
+            task = asyncio.create_task(
                 self._adapter.call_api(
                     endpoint="send_msg",
                     target_type=self._target_type,
                     target_id=self._target_id,
                     message_type="html",
-                    content=html_data
+                    content=html_data,
+                    at_user_ids=self._at_user_ids,
+                    at_all=self._at_all,
+                    reply_message_id=self._reply_message_id
                 )
             )
+            self._reset_modifiers()
+            return task
         
         def Markdown(self, markdown_data: str):
             """发送Markdown消息"""
-            return asyncio.create_task(
+            task = asyncio.create_task(
                 self._adapter.call_api(
                     endpoint="send_msg",
                     target_type=self._target_type,
                     target_id=self._target_id,
                     message_type="markdown",
-                    content=markdown_data
+                    content=markdown_data,
+                    at_user_ids=self._at_user_ids,
+                    at_all=self._at_all,
+                    reply_message_id=self._reply_message_id
                 )
             )
+            self._reset_modifiers()
+            return task
         
         def Dice(self):
             """发送骰子消息"""
-            return asyncio.create_task(
+            task = asyncio.create_task(
                 self._adapter.call_api(
                     endpoint="send_msg",
                     target_type=self._target_type,
                     target_id=self._target_id,
                     message_type="dice",
-                    content=""
+                    content="",
+                    at_user_ids=self._at_user_ids,
+                    at_all=self._at_all,
+                    reply_message_id=self._reply_message_id
                 )
             )
+            self._reset_modifiers()
+            return task
         
         def Rps(self):
             """发送猜拳消息"""
-            return asyncio.create_task(
+            task = asyncio.create_task(
                 self._adapter.call_api(
                     endpoint="send_msg",
                     target_type=self._target_type,
                     target_id=self._target_id,
                     message_type="rps",
-                    content=""
+                    content="",
+                    at_user_ids=self._at_user_ids,
+                    at_all=self._at_all,
+                    reply_message_id=self._reply_message_id
                 )
             )
+            self._reset_modifiers()
+            return task
         
         def Location(self, lat: float, lon: float, title: str = None, content: str = None):
             """发送位置消息"""
@@ -216,15 +344,20 @@ class SandboxAdapter(sdk.BaseAdapter):
                 "title": title or "",
                 "content": content or ""
             }
-            return asyncio.create_task(
+            task = asyncio.create_task(
                 self._adapter.call_api(
                     endpoint="send_msg",
                     target_type=self._target_type,
                     target_id=self._target_id,
                     message_type="location",
-                    content=location_data
+                    content=location_data,
+                    at_user_ids=self._at_user_ids,
+                    at_all=self._at_all,
+                    reply_message_id=self._reply_message_id
                 )
             )
+            self._reset_modifiers()
+            return task
         
         def Poke(self, user_id: str, type: str = "poke"):
             """发送戳一戳消息"""
@@ -232,15 +365,20 @@ class SandboxAdapter(sdk.BaseAdapter):
                 "user_id": user_id,
                 "type": type
             }
-            return asyncio.create_task(
+            task = asyncio.create_task(
                 self._adapter.call_api(
                     endpoint="send_msg",
                     target_type=self._target_type,
                     target_id=self._target_id,
                     message_type="poke",
-                    content=poke_data
+                    content=poke_data,
+                    at_user_ids=self._at_user_ids,
+                    at_all=self._at_all,
+                    reply_message_id=self._reply_message_id
                 )
             )
+            self._reset_modifiers()
+            return task
         
         def Share(self, url: str, title: str, content: str = None, image: str = None):
             """发送链接分享消息"""
@@ -250,15 +388,26 @@ class SandboxAdapter(sdk.BaseAdapter):
                 "content": content or title,
                 "image": image or ""
             }
-            return asyncio.create_task(
+            task = asyncio.create_task(
                 self._adapter.call_api(
                     endpoint="send_msg",
                     target_type=self._target_type,
                     target_id=self._target_id,
                     message_type="share",
-                    content=share_data
+                    content=share_data,
+                    at_user_ids=self._at_user_ids,
+                    at_all=self._at_all,
+                    reply_message_id=self._reply_message_id
                 )
             )
+            self._reset_modifiers()
+            return task
+        
+        def _reset_modifiers(self):
+            """重置链式修饰器状态"""
+            self._at_user_ids = []
+            self._reply_message_id = None
+            self._at_all = False
     
     def __init__(self, sdk):
         super().__init__()
@@ -428,6 +577,11 @@ class SandboxAdapter(sdk.BaseAdapter):
             message_type = params.get("message_type", "text")
             content = params.get("content", "")
             
+            # 获取链式修饰器参数
+            at_user_ids = params.get("at_user_ids", [])
+            at_all = params.get("at_all", False)
+            reply_message_id = params.get("reply_message_id", None)
+            
             # 构建消息段数组（OneBot12 格式）
             message_segments = []
             
@@ -441,6 +595,20 @@ class SandboxAdapter(sdk.BaseAdapter):
             elif message_type == "face":
                 message_segments = [{"type": "face", "data": {"id": content}}]
                 display_text = f"[表情: {content}]"
+            elif message_type == "recall":
+                message_segments = [{"type": "text", "data": {"text": "[消息已撤回]"}}]
+                display_text = "[消息已撤回]"
+            elif message_type == "raw_ob12":
+                # 原始 OneBot12 格式消息
+                if isinstance(content, list):
+                    message_segments = content
+                    display_text = "[原始消息]"
+                elif isinstance(content, dict):
+                    message_segments = [content]
+                    display_text = "[原始消息]"
+                else:
+                    message_segments = [{"type": "text", "data": {"text": str(content)}}]
+                    display_text = str(content)
             elif message_type == "at":
                 message_segments = [
                     {"type": "mention", "data": {"user_id": content}},
@@ -540,6 +708,45 @@ class SandboxAdapter(sdk.BaseAdapter):
                 message_segments = [{"type": "text", "data": {"text": content}}]
                 display_text = content
 
+            # 在消息段前插入链式修饰器（@、@全体、回复）
+            final_segments = []
+            
+            # 先添加回复
+            if reply_message_id:
+                final_segments.append({
+                    "type": "reply",
+                    "data": {"message_id": reply_message_id}
+                })
+                final_segments.append({
+                    "type": "text",
+                    "data": {"text": " "}
+                })
+            
+            # 添加@全体
+            if at_all:
+                final_segments.append({
+                    "type": "mention_all",
+                    "data": {}
+                })
+                final_segments.append({
+                    "type": "text",
+                    "data": {"text": " "}
+                })
+            
+            # 添加@用户列表
+            for user_id in at_user_ids:
+                final_segments.append({
+                    "type": "mention",
+                    "data": {"user_id": user_id}
+                })
+                final_segments.append({
+                    "type": "text",
+                    "data": {"text": " "}
+                })
+            
+            # 添加原始消息段
+            final_segments.extend(message_segments)
+
             # 构建消息
             message = {
                 "type": "message",
@@ -548,7 +755,7 @@ class SandboxAdapter(sdk.BaseAdapter):
                 "user_name": "机器人",
                 "message": display_text,
                 "message_type_detail": message_type,
-                "message_segments": message_segments,
+                "message_segments": final_segments,
                 "timestamp": int(time.time())
             }
 
@@ -580,6 +787,7 @@ class SandboxAdapter(sdk.BaseAdapter):
                 "status": "ok",
                 "retcode": 0,
                 "data": {"message_id": str(len(self.messages))},
+                "message_id": str(len(self.messages)),
                 "message": "消息发送成功",
                 "self": {"user_id": self.self_id}
             }
@@ -905,6 +1113,10 @@ class SandboxAdapter(sdk.BaseAdapter):
     async def shutdown(self):
         """关闭适配器"""
         self.logger.info("正在关闭沙箱适配器...")
+        
+        # 取消注册路由
+        router.unregister_websocket("sandbox", "/ws")
+        router.unregister_http_route("sandbox", "/")
         
         # 关闭所有 WebSocket 连接
         for ws in self._web_connections:
