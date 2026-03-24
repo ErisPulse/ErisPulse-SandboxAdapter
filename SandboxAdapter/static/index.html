@@ -216,6 +216,164 @@
             min-height: 0;
         }
 
+        /* 侧边栏 */
+        .sidebar {
+            width: 240px;
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .sidebar-header h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .btn-add-account {
+            width: 28px;
+            height: 28px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-primary);
+            transition: all 0.2s;
+        }
+
+        .btn-add-account:hover {
+            border-color: var(--bubble-active);
+            background: var(--bubble-active);
+        }
+
+        .btn-add-account svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .sidebar-user-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+        }
+
+        .sidebar-user-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar-user-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar-user-list::-webkit-scrollbar-thumb {
+            background-color: var(--border-color);
+            border-radius: 2px;
+        }
+
+        .sidebar-user-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            margin-bottom: 4px;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sidebar-user-item:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .sidebar-user-item.active {
+            background: var(--bubble-active);
+            border-color: var(--bubble-active);
+        }
+
+        .sidebar-user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: var(--bg-tertiary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-user-item.active .sidebar-user-avatar {
+            background-color: var(--bg-secondary);
+        }
+
+        .sidebar-user-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .sidebar-user-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .sidebar-user-id {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .btn-delete-user {
+            width: 24px;
+            height: 24px;
+            border: none;
+            background: transparent;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-tertiary);
+            opacity: 0;
+            transition: all 0.2s;
+        }
+
+        .sidebar-user-item:hover .btn-delete-user {
+            opacity: 1;
+        }
+
+        .btn-delete-user:hover {
+            background: #FFEBEE;
+            color: #C62828;
+        }
+
+        .btn-delete-user svg {
+            width: 14px;
+            height: 14px;
+        }
+
         .chat-area {
             flex: 1;
             display: flex;
@@ -832,156 +990,6 @@
             line-height: 1.5;
         }
 
-        /* 账户管理模态框样式 */
-        .account-modal-content {
-            width: 90%;
-            max-width: 500px;
-        }
-
-        .account-modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .account-modal-header h3 {
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin: 0;
-        }
-
-        .btn-close-modal {
-            width: 32px;
-            height: 32px;
-            padding: 6px;
-            border: 1px solid var(--border-color);
-            background: var(--bg-tertiary);
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-close-modal:hover {
-            border-color: var(--bubble-active);
-            background: var(--bg-secondary);
-        }
-
-        .btn-close-modal svg {
-            width: 16px;
-            height: 16px;
-        }
-
-        .account-user-list {
-            max-height: 400px;
-            overflow-y: auto;
-            margin-bottom: 16px;
-            padding: 8px;
-            background: var(--bg-secondary);
-            border-radius: 8px;
-        }
-
-        .account-user-list::-webkit-scrollbar {
-            width: 4px;
-        }
-
-        .account-user-list::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .account-user-list::-webkit-scrollbar-thumb {
-            background-color: var(--border-color);
-            border-radius: 2px;
-        }
-
-        .account-user-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px;
-            margin-bottom: 8px;
-            background: var(--bg-tertiary);
-            border: 2px solid transparent;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .account-user-item:hover {
-            border-color: var(--bubble-active);
-        }
-
-        .account-user-item.active {
-            border-color: var(--bubble-active);
-            background: var(--bubble-active);
-        }
-
-        .account-user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background-color: var(--bubble-active);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-primary);
-            font-weight: 600;
-            font-size: 15px;
-            flex-shrink: 0;
-        }
-
-        .account-user-info {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .account-user-name {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 4px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .account-user-id {
-            font-size: 12px;
-            color: var(--text-secondary);
-            font-weight: 400;
-        }
-
-        .account-user-status {
-            font-size: 11px;
-            padding: 3px 8px;
-            border-radius: 10px;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-
-        .account-user-status.current {
-            background: #E8F5E9;
-            color: #2E7D32;
-        }
-
-        .account-user-status.selected {
-            background: var(--bubble-active);
-            color: var(--text-primary);
-        }
-
-        .account-modal-actions {
-            display: flex;
-            gap: 12px;
-            margin-top: 20px;
-        }
-
-        .account-modal-actions .btn-primary {
-            flex: 1;
-        }
-
         /* 响应式 */
         @media (max-width: 768px) {
             .message {
@@ -997,13 +1005,8 @@
                 font-size: 11px;
             }
 
-            .account-modal-content {
-                width: 95%;
-                max-width: none;
-            }
-
-            .account-user-list {
-                max-height: 300px;
+            .sidebar {
+                width: 200px;
             }
         }
     </style>
@@ -1030,23 +1033,31 @@
             </div>
             <div class="header-right">
                 <div class="status" id="connectionStatus">连接中...</div>
-                <button class="btn-icon" id="btnAccountManager" aria-label="账户管理">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4 4 4-1.79 4-4 1.79-4-4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                    </svg>
-                </button>
             </div>
         </div>
         
         <div class="main">
+            <!-- 侧边栏 -->
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <h3>账户列表</h3>
+                    <button class="btn-add-account" id="btnAddAccount" aria-label="添加账户">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="sidebar-user-list" id="sidebarUserList"></div>
+            </div>
+            
             <div class="chat-area">
                 <div class="chat-header">
-                    <h2 id="chatHeaderTitle">选择一个用户开始对话</h2>
+                    <h2 id="chatHeaderTitle">沙箱 Bot</h2>
                 </div>
                 <div class="chat-messages" id="chatMessages">
                     <div class="empty-state">
-                        <h3>未选择用户</h3>
-                        <p>点击右上角账户管理按钮，选择或添加用户</p>
+                        <h3>暂无消息</h3>
+                        <p>开始发送第一条消息吧</p>
                     </div>
                 </div>
                 <div class="chat-input-area">
@@ -1068,31 +1079,13 @@
         </div>
     </div>
 
-    <!-- 账户管理模态框 -->
-    <div class="modal" id="accountModal">
-        <div class="modal-content account-modal-content">
-            <div class="account-modal-header">
-                <h3>账户管理</h3>
-                <button class="btn-icon btn-close-modal" id="btnCloseAccountModal" aria-label="关闭">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-                    </svg>
-                </button>
-            </div>
-            <div class="account-user-list" id="accountUserList"></div>
-            <div class="account-modal-actions">
-                <button class="btn-primary" id="btnAddNewUser">+ 添加用户</button>
-            </div>
-        </div>
-    </div>
-
     <!-- 添加用户模态框 -->
     <div class="modal" id="addUserModal">
         <div class="modal-content">
-            <h3>添加用户</h3>
+            <h3>添加账户</h3>
             <div class="form-group">
-                <label for="newUserName">用户名</label>
-                <input type="text" id="newUserName" placeholder="请输入用户名" maxlength="32">
+                <label for="newUserName">账户名称</label>
+                <input type="text" id="newUserName" placeholder="请输入账户名称" maxlength="32">
             </div>
             <div class="modal-actions">
                 <button class="btn-secondary" id="btnCancelAddUser">取消</button>
@@ -1117,16 +1110,13 @@
         const setupUserName = document.getElementById('setupUserName');
         const setupBtn = document.getElementById('setupBtn');
         const connectionStatus = document.getElementById('connectionStatus');
-        const btnAccountManager = document.getElementById('btnAccountManager');
         const chatHeaderTitle = document.getElementById('chatHeaderTitle');
         const chatMessages = document.getElementById('chatMessages');
         const messageInput = document.getElementById('messageInput');
         const btnSend = document.getElementById('btnSend');
         const messageTypeBubbles = document.getElementById('messageTypeBubbles');
-        const accountModal = document.getElementById('accountModal');
-        const accountUserList = document.getElementById('accountUserList');
-        const btnCloseAccountModal = document.getElementById('btnCloseAccountModal');
-        const btnAddNewUser = document.getElementById('btnAddNewUser');
+        const sidebarUserList = document.getElementById('sidebarUserList');
+        const btnAddAccount = document.getElementById('btnAddAccount');
         const addUserModal = document.getElementById('addUserModal');
         const newUserName = document.getElementById('newUserName');
         const btnCancelAddUser = document.getElementById('btnCancelAddUser');
@@ -1144,21 +1134,21 @@
 
         // 保存用户数据
         function saveUserData() {
-            localStorage.setItem('sandbox_users', JSON.stringify(users));
+            localStorage.setItem('sandbox_v2_users', JSON.stringify(users));
             if (currentUser) {
-                localStorage.setItem('sandbox_current_user', JSON.stringify(currentUser));
+                localStorage.setItem('sandbox_v2_current_user', JSON.stringify(currentUser));
             }
         }
 
         // 加载用户数据
         function loadUserData() {
-            const savedUsers = localStorage.getItem('sandbox_users');
-            const savedCurrentUser = localStorage.getItem('sandbox_current_user');
-            
+            const savedUsers = localStorage.getItem('sandbox_v2_users');
+            const savedCurrentUser = localStorage.getItem('sandbox_v2_current_user');
+
             if (savedUsers) {
                 users = JSON.parse(savedUsers);
             }
-            
+
             if (savedCurrentUser) {
                 currentUser = JSON.parse(savedCurrentUser);
             }
@@ -1186,6 +1176,12 @@
             setupPage.style.display = 'none';
             mainApp.style.display = 'flex';
             connectWebSocket();
+            renderSidebarUserList();
+            
+            // 自动选择第一个用户
+            if (users.length > 0 && !currentSelectedUser) {
+                selectUser(users[0]);
+            }
         }
 
         // 创建用户
@@ -1204,43 +1200,85 @@
         function setCurrentUser(user) {
             currentUser = user;
             saveUserData();
-            
-            // 如果当前选择的用户是当前用户，自动切换聊天
-            if (currentSelectedUser && currentSelectedUser.id === user.id) {
-                selectUser(user);
-            }
         }
 
-        // 渲染账户用户列表
-        function renderAccountUserList() {
-            accountUserList.innerHTML = '';
+        // 删除用户
+        function deleteUser(userId, event) {
+            event.stopPropagation();
+            
+            const index = users.findIndex(u => u.id === userId);
+            if (index === -1) return;
+            
+            const userName = users[index].name;
+            if (!confirm(`确定要删除账户 "${userName}" 吗？\n删除后该账户的聊天记录将无法恢复。`)) {
+                return;
+            }
+            
+            users.splice(index, 1);
+            saveUserData();
+            
+            // 如果删除的是当前选中的用户，切换到第一个用户
+            if (currentSelectedUser && currentSelectedUser.id === userId) {
+                if (users.length > 0) {
+                    selectUser(users[0]);
+                } else {
+                    currentSelectedUser = null;
+                    messages = [];
+                    renderMessages();
+                    messageInput.disabled = true;
+                    btnSend.disabled = true;
+                }
+            }
+            
+            // 如果删除的是当前登录用户
+            if (currentUser && currentUser.id === userId) {
+                if (users.length > 0) {
+                    currentUser = users[0];
+                    saveUserData();
+                } else {
+                    currentUser = null;
+                    saveUserData();
+                    showSetupPage();
+                    return;
+                }
+            }
+            
+            renderSidebarUserList();
+        }
+
+        // 渲染侧边栏用户列表
+        function renderSidebarUserList() {
+            sidebarUserList.innerHTML = '';
             
             users.forEach(user => {
                 const item = document.createElement('div');
-                item.className = 'account-user-item';
-                if (currentUser && currentUser.id === user.id) {
+                item.className = 'sidebar-user-item';
+                if (currentSelectedUser && currentSelectedUser.id === user.id) {
                     item.classList.add('active');
                 }
                 
-                const isCurrentUser = currentUser && currentUser.id === user.id;
-                const isSelectedUser = currentSelectedUser && currentSelectedUser.id === user.id;
-                
                 item.innerHTML = `
-                    <div class="account-user-avatar">${getUserInitial(user.name)}</div>
-                    <div class="account-user-info">
-                        <div class="account-user-name">${escapeHtml(user.name)}</div>
-                        <div class="account-user-id">ID: ${user.id}</div>
+                    <div class="sidebar-user-avatar">${getUserInitial(user.name)}</div>
+                    <div class="sidebar-user-info">
+                        <div class="sidebar-user-name">${escapeHtml(user.name)}</div>
+                        <div class="sidebar-user-id">ID: ${user.id}</div>
                     </div>
-                    <div class="account-user-status ${isCurrentUser ? 'current' : ''}">${isCurrentUser ? '当前账户' : (isSelectedUser ? '正在使用' : '')}</div>
+                    <button class="btn-delete-user" aria-label="删除账户">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                        </svg>
+                    </button>
                 `;
                 
-                item.addEventListener('click', () => {
-                    setCurrentUser(user);
+                item.addEventListener('click', (e) => {
+                    if (e.target.closest('.btn-delete-user')) return;
                     selectUser(user);
-                    accountModal.classList.remove('show');
                 });
                 
-                accountUserList.appendChild(item);
+                const deleteBtn = item.querySelector('.btn-delete-user');
+                deleteBtn.addEventListener('click', (e) => deleteUser(user.id, e));
+                
+                sidebarUserList.appendChild(item);
             });
         }
 
@@ -1248,7 +1286,7 @@
         function selectUser(user) {
             currentSelectedUser = user;
             renderChatHeader();
-            renderAccountUserList();
+            renderSidebarUserList();
             
             // 加载该用户的消息
             loadMessages(user.id);
@@ -1260,9 +1298,9 @@
         // 渲染聊天头部
         function renderChatHeader() {
             if (currentSelectedUser) {
-                chatHeaderTitle.textContent = `与 ${escapeHtml(currentSelectedUser.name)} 对话`;
+                chatHeaderTitle.textContent = `当前账户: ${escapeHtml(currentSelectedUser.name)}`;
             } else {
-                chatHeaderTitle.textContent = '选择一个用户开始对话';
+                chatHeaderTitle.textContent = '沙箱 Bot';
             }
         }
 
@@ -1284,8 +1322,8 @@
             if (!currentSelectedUser) {
                 chatMessages.innerHTML = `
                     <div class="empty-state">
-                        <h3>未选择用户</h3>
-                        <p>点击右上角账户管理按钮，选择或添加用户</p>
+                        <h3>暂无消息</h3>
+                        <p>开始发送第一条消息吧</p>
                     </div>
                 `;
                 return;
@@ -1610,20 +1648,8 @@
             }
         });
 
-        // 账户管理按钮
-        btnAccountManager.addEventListener('click', () => {
-            renderAccountUserList();
-            accountModal.classList.add('show');
-        });
-
-        // 关闭账户管理模态框
-        btnCloseAccountModal.addEventListener('click', () => {
-            accountModal.classList.remove('show');
-        });
-
-        // 添加新用户按钮
-        btnAddNewUser.addEventListener('click', () => {
-            accountModal.classList.remove('show');
+        // 添加账户按钮
+        btnAddAccount.addEventListener('click', () => {
             newUserName.value = '';
             addUserModal.classList.add('show');
         });
@@ -1637,20 +1663,14 @@
         btnConfirmAddUser.addEventListener('click', () => {
             const name = newUserName.value.trim();
             if (!name) {
-                alert('请输入用户名');
+                alert('请输入账户名称');
                 return;
             }
-            
+
             const newUser = createUser(name);
             addUserModal.classList.remove('show');
-            accountModal.classList.add('show');
-            renderAccountUserList();
-            
-            // 如果是第一个用户，自动选择
-            if (users.length === 1) {
-                setCurrentUser(newUser);
-                selectUser(newUser);
-            }
+            renderSidebarUserList();
+            selectUser(newUser);
         });
 
         messageTypeBubbles.querySelectorAll('.type-bubble').forEach(bubble => {
