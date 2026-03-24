@@ -13,9 +13,8 @@ class TestConfig:
     adapter_name: str = "sandbox"  # 要测试的适配器名称
     
     # 基础配置
-    group_id: str = "grayrat_house"  # 测试群号
-    test_user_id: str = "eris"  # 测试用户ID
-    test_user_id_2: str = "loxy"  # 第二个测试用户ID
+    test_user_ids: List[str] = field(default_factory=lambda: ["u_4guyrdg19", "u_6vb3xw9xp"])  # 测试用户ID列表（可设置多个）
+    current_user_index: int = 0  # 当前使用的用户索引（用于轮换发送给不同用户）
     
     # 文件路径配置
     test_files_dir: str = "test_files"
@@ -95,6 +94,17 @@ class TestRunner:
         except Exception:
             return None
     
+    def _get_current_user_id(self) -> str:
+        """获取当前用户ID（支持轮换）"""
+        if not self.config.test_user_ids:
+            raise ValueError("未配置测试用户ID列表")
+        return self.config.test_user_ids[self.config.current_user_index]
+    
+    def _rotate_user(self):
+        """轮换到下一个用户"""
+        if len(self.config.test_user_ids) > 1:
+            self.config.current_user_index = (self.config.current_user_index + 1) % len(self.config.test_user_ids)
+    
     def _register_test_cases(self):
         """注册所有测试用例"""
         # 基础测试
@@ -160,10 +170,9 @@ class TestRunner:
         ])
     
     def _add_mention_tests(self):
-        """添加@功能测试用例"""
+        """添加@功能测试用例（私聊中@功能可能不适用）"""
         self.test_cases.extend([
-            TestCase("@全体成员", self.config.enable_mention_tests, None),
-            TestCase("@全体 + @用户组合", self.config.enable_mention_tests, None),
+            TestCase("@用户消息", self.config.enable_mention_tests, None),
         ])
     
     def _check_response(self, response: Any) -> tuple[bool, Optional[dict]]:
@@ -242,83 +251,82 @@ class TestRunner:
     
     async def _execute_test(self, test_num: int) -> Optional[Any]:
         """执行具体的测试逻辑"""
-        group_id = self.config.group_id
-        test_user_id = self.config.test_user_id
+        user_id = self._get_current_user_id()
         
         # 1. 发送文本消息
         if test_num == 1:
-            return await self.adapter.To("group", group_id).Text("Hello, 这是一条测试消息！")
+            return await self.adapter.To("user", user_id).Text("Hello, 这是一条测试消息！")
         
-        # 2. 发送@用户消息
+        # 2. 发送@用户消息（私聊中@功能可能不适用）
         elif test_num == 2:
-            return await self.adapter.To("group", group_id).At(test_user_id).Text("@某位成员")
+            return await self.adapter.To("user", user_id).Text("@某位成员（私聊测试）")
         
         # 3. 发送表情
         elif test_num == 3:
-            return await self.adapter.To("group", group_id).Face("1")
+            return await self.adapter.To("user", user_id).Face("1")
         
         # 4. 发送Markdown消息
         elif test_num == 4:
             markdown_text = "**粗体** 和 *斜体* 文本测试"
-            return await self.adapter.To("group", group_id).Markdown(markdown_text)
+            return await self.adapter.To("user", user_id).Markdown(markdown_text)
         
         # 5. 发送Html消息
         elif test_num == 5:
             html_text = "<b>粗体</b> 和 <i>斜体</i> 文本测试"
-            return await self.adapter.To("group", group_id).Html(html_text)
+            return await self.adapter.To("user", user_id).Html(html_text)
         
         # 6. 发送图片（本地文件）
         elif test_num == 6:
             image_data = self._read_file(self.config.image_file)
             if image_data:
-                return await self.adapter.To("group", group_id).Image(image_data)
+                return await self.adapter.To("user", user_id).Image(image_data)
             # 回退到 URL 方式
-            return await self.adapter.To("group", group_id).Image(self.config.image_url)
+            return await self.adapter.To("user", user_id).Image(self.config.image_url)
         
         # 7. 发送图片（URL）
         elif test_num == 7:
-            return await self.adapter.To("group", group_id).Image(self.config.image_url)
+            return await self.adapter.To("user", user_id).Image(self.config.image_url)
         
         # 8. 发送视频（本地文件）
         elif test_num == 8:
             video_data = self._read_file(self.config.video_file)
             if video_data:
-                return await self.adapter.To("group", group_id).Video(video_data)
+                return await self.adapter.To("user", user_id).Video(video_data)
             # 回退到 URL 方式
-            return await self.adapter.To("group", group_id).Video(self.config.video_url)
+            return await self.adapter.To("user", user_id).Video(self.config.video_url)
         
         # 9. 发送视频（URL）
         elif test_num == 9:
-            return await self.adapter.To("group", group_id).Video(self.config.video_url)
+            return await self.adapter.To("user", user_id).Video(self.config.video_url)
         
         # 10. 发送语音（本地文件）
         elif test_num == 10:
             if self.config.voice_file:
                 voice_data = self._read_file(self.config.voice_file)
                 if voice_data:
-                    return await self.adapter.To("group", group_id).Voice(voice_data)
+                    return await self.adapter.To("user", user_id).Voice(voice_data)
             # 回退到 URL 方式
-            return await self.adapter.To("group", group_id).Voice(self.config.voice_url)
+            return await self.adapter.To("user", user_id).Voice(self.config.voice_url)
         
         # 11. 发送语音（URL）
         elif test_num == 11:
-            return await self.adapter.To("group", group_id).Voice(self.config.voice_url)
+            return await self.adapter.To("user", user_id).Voice(self.config.voice_url)
         
         # 12. 发送文件（本地）
         elif test_num == 12:
             file_data = self._read_file(self.config.doc_file)
             if file_data:
-                return await self.adapter.To("group", group_id).File(file_data, self.config.doc_file)
-            return await self.adapter.To("group", group_id).File(self.config.file_url)
+                return await self.adapter.To("user", user_id).File(file_data, self.config.doc_file)
+            return await self.adapter.To("user", user_id).File(self.config.file_url)
         
         # 13. 发送文件（URL）
         elif test_num == 13:
-            return await self.adapter.To("group", group_id).File(self.config.file_url)
+            return await self.adapter.To("user", user_id).File(self.config.file_url)
         
         # 14. 发送回复消息
         elif test_num == 14:
             test_message = "这是一条测试消息，用于后续回复功能测试"
-            result = await self.adapter.To("group", group_id).Text(test_message)
+            result = await self.adapter.To("user", user_id).Text(test_message)
             
             # 尝试获取 message_id
             if isinstance(result, dict) and result.get("data", {}).get("message_id"):
@@ -332,22 +340,22 @@ class TestRunner:
         elif test_num == 15:
             ob12_message = [
                 {"type": "text", "data": {"text": "组合消息测试："}},
-                {"type": "mention", "data": {"user_id": test_user_id}}
+                {"type": "text", "data": {"text": "私聊中不支持mention"}}
             ]
-            return await self.adapter.To("group", group_id).Raw_ob12(ob12_message)
+            return await self.adapter.To("user", user_id).Raw_ob12(ob12_message)
         
         # 16. 撤回消息
         elif test_num == 16:
             # 先发送一条消息
             test_message = "这条消息将被撤回"
-            result = await self.adapter.To("group", group_id).Text(test_message)
+            result = await self.adapter.To("user", user_id).Text(test_message)
             # 获取 message_id
             self.recall_message_id = result.get("data", {}).get("message_id")
             
             # 等待一下再撤回
             await asyncio.sleep(2)
             # 撤回消息
-            return await self.adapter.To("group", group_id).Recall(self.recall_message_id)
+            return await self.adapter.To("user", user_id).Recall(self.recall_message_id)
         
         # 17. 发送格式化消息（Raw_ob12）
         elif test_num == 17:
@@ -355,7 +363,7 @@ class TestRunner:
                 {"type": "text", "data": {"text": "这是格式化消息 "}},
                 {"type": "text", "data": {"text": "使用 Raw_ob12 发送"}}
             ]
-            return await self.adapter.To("group", group_id).Raw_ob12(ob12_message)
+            return await self.adapter.To("user", user_id).Raw_ob12(ob12_message)
         
         # 18. 发送文本消息段
         elif test_num == 18:
@@ -363,7 +371,7 @@ class TestRunner:
                 {"type": "text", "data": {"text": "第一条文本消息段"}},
                 {"type": "text", "data": {"text": "第二条文本消息段"}}
             ]
-            return await self.adapter.To("group", group_id).Raw_ob12(ob12_message)
+            return await self.adapter.To("user", user_id).Raw_ob12(ob12_message)
         
         # 19. 发送组合消息段
         elif test_num == 19:
@@ -371,41 +379,37 @@ class TestRunner:
                 {"type": "text", "data": {"text": "文本 + 图片："}},
                 {"type": "image", "data": {"file": self.config.image_url}}
             ]
-            return await self.adapter.To("group", group_id).Raw_ob12(ob12_message)
+            return await self.adapter.To("user", user_id).Raw_ob12(ob12_message)
         
-        # 20. 多次@用户（链式调用）
+        # 20. @用户消息（私聊测试）
         elif test_num == 20:
-            return await self.adapter.To("group", group_id).At(test_user_id).At(self.config.test_user_id_2).Text(" @多个用户")
+            return await self.adapter.To("user", user_id).Text("私聊中@功能的测试")
         
-        # 21. 链式调用 - 回复+@用户
+        # 21. 链式调用 - 回复
         elif test_num == 21:
-            return await self.adapter.To("group", group_id).Reply(self.reply_message_id).At(test_user_id).Text("回复并@用户")
+            return await self.adapter.To("user", user_id).Reply(self.reply_message_id).Text("回复消息")
         
-        # 22. 链式调用 - 组合修饰符
+        # 22. 链式调用测试
         elif test_num == 22:
-            return await self.adapter.To("group", group_id).At(test_user_id).Reply(self.reply_message_id).Text("@用户并回复")
+            return await self.adapter.To("user", user_id).Reply(self.reply_message_id).Text("链式调用测试")
         
-        # 23. 格式化消息 + 链式@
+        # 23. 格式化消息测试
         elif test_num == 23:
-            ob12_message = [{"type": "text", "data": {"text": "格式化消息 + 链式@"}}]
-            return await self.adapter.To("group", group_id).At(test_user_id).Raw_ob12(ob12_message)
+            ob12_message = [{"type": "text", "data": {"text": "格式化消息测试"}}]
+            return await self.adapter.To("user", user_id).Raw_ob12(ob12_message)
         
         # 24. 复杂组合消息
         elif test_num == 24:
             ob12_message = [
                 {"type": "text", "data": {"text": "复杂组合消息："}},
-                {"type": "mention", "data": {"user_id": test_user_id}},
+                {"type": "text", "data": {"text": "私聊不支持mention"}},
                 {"type": "reply", "data": {"message_id": self.reply_message_id}}
             ]
-            return await self.adapter.To("group", group_id).Raw_ob12(ob12_message)
+            return await self.adapter.To("user", user_id).Raw_ob12(ob12_message)
         
-        # 25. @全体成员
+        # 25. @用户消息（保留测试用例编号）
         elif test_num == 25:
-            return await self.adapter.To("group", group_id).AtAll().Text("这是全体成员消息")
-        
-        # 26. @全体 + @用户组合
-        elif test_num == 26:
-            return await self.adapter.To("group", group_id).AtAll().At(test_user_id).Text("全体 + 单个@")
+            return await self.adapter.To("user", user_id).Text("@用户消息测试（私聊）")
         
         return None
     
@@ -491,14 +495,18 @@ async def main():
         # config.adapter_name = "onebot12"
         # config.adapter_name = "red"
         
-        # 2. 只运行特定测试
+        # 2. 配置测试用户ID列表（沙箱环境只支持私聊）
+        # config.test_user_ids = ["user1", "user2", "user3"]  # 设置多个测试用户
+        # config.test_user_ids = ["eris"]  # 只发送给单个用户
+        
+        # 3. 只运行特定测试
         # config.specific_tests = [6, 7, 8, 9, 10, 11]  # 只运行媒体测试
         
-        # 3. 禁用某些测试类别
+        # 4. 禁用某些测试类别
         # config.enable_media_tests = False  # 禁用媒体测试
         # config.enable_chain_tests = False   # 禁用链式调用测试
         
-        # 4. 配置文件路径
+        # 5. 配置文件路径
         # config.video_file = "my_video.mp4"
         # config.voice_file = "my_voice.amr"
         # config.test_files_dir = "custom/files"
@@ -507,7 +515,7 @@ async def main():
         config.send_interval = 1.0
         
         print(f"测试适配器: {config.adapter_name}")
-        print(f"测试目标: 群号 {config.group_id}")
+        print(f"测试目标: 用户 {', '.join(config.test_user_ids)}")
         print("=" * 50)
         
         # 创建并运行测试
