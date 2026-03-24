@@ -17,9 +17,9 @@ class SandboxAdapter(sdk.BaseAdapter):
         
         def __init__(self, adapter, target_type=None, target_id=None, account_id=None):
             super().__init__(adapter, target_type, target_id, account_id)
-            self._at_user_ids = []       # @的用户列表
-            self._reply_message_id = None # 回复的消息ID
-            self._at_all = False         # 是否@全体
+            self._at_user_ids = []
+            self._reply_message_id = None
+            self._at_all = False
         
         def Text(self, text: str):
             """发送文本消息"""
@@ -367,25 +367,21 @@ class SandboxAdapter(sdk.BaseAdapter):
         self.config = self._get_config()
         self.self_id = self.config.get("self_id", "sandbox_bot")
         
-        # 存储系统（用于数据持久化）
+        # 存储系统
         self.storage = sdk.storage
         
-        # 虚拟用户和群组存储
-        self.friends: Dict[str, Dict] = {}  # user_id -> {name, avatar, ...}
-        self.groups: Dict[str, Dict] = {}   # group_id -> {name, members: [], ...}
-        self.messages: List[Dict] = []       # 消息记录
+        # 消息存储（按用户ID分组）
+        # 结构: {user_id: [message1, message2, ...]}
+        self.user_messages: Dict[str, List[Dict]] = {}
         
-        # WebSocket 连接（网页端）
+        # WebSocket 连接
         self._web_connections: List[WebSocket] = []
         
         # 初始化转换器
         self.convert = self._setup_converter()
         
-        # 从持久化存储加载数据
+        # 加载持久化数据
         self._load_persisted_data()
-        
-        # 如果没有数据，加载默认数据
-        self._init_default_data()
     
     def _setup_converter(self):
         from .Converter import SandboxConverter
@@ -409,25 +405,11 @@ class SandboxAdapter(sdk.BaseAdapter):
     def _load_persisted_data(self):
         """从持久化存储加载数据"""
         try:
-            # 加载好友数据
-            persisted_friends = self.storage.get("sandbox:friends", {})
-            if persisted_friends:
-                self.friends.update(persisted_friends)
-                self.logger.info(f"从存储加载了 {len(self.friends)} 个好友")
-            
-            # 加载群组数据
-            persisted_groups = self.storage.get("sandbox:groups", {})
-            if persisted_groups:
-                self.groups.update(persisted_groups)
-                self.logger.info(f"从存储加载了 {len(self.groups)} 个群组")
-            
-            # 加载消息数据
-            persisted_messages = self.storage.get("sandbox:messages", [])
+            persisted_messages = self.storage.get("sandbox:user_messages", {})
             if persisted_messages:
-                # 清理加载的消息数据
-                cleaned_messages = self._clean_for_serialization(persisted_messages)
-                self.messages.extend(cleaned_messages)
-                self.logger.info(f"从存储加载了 {len(cleaned_messages)} 条消息")
+                self.user_messages = self._clean_for_serialization(persisted_messages)
+                total_messages = sum(len(msgs) for msgs in self.user_messages.values())
+                self.logger.info(f"从存储加载了 {total_messages} 条消息，共 {len(self.user_messages)} 个用户")
         except Exception as e:
             self.logger.warning(f"加载数据失败: {e}")
     
@@ -436,90 +418,44 @@ class SandboxAdapter(sdk.BaseAdapter):
         if isinstance(data, (str, int, float, bool, type(None))):
             return data
         elif isinstance(data, bytes):
-            # 尝试解码bytes为UTF-8字符串
             try:
                 return data.decode('utf-8')
             except UnicodeDecodeError:
-                # 如果是二进制数据（图片、视频等），转换为base64
                 import base64
                 try:
                     return base64.b64encode(data).decode('utf-8')
                 except Exception:
                     return ''
         elif isinstance(data, dict):
-            # 特殊处理消息段：检测媒体类型并转换base64
-            if 'type' in data and 'data' in data:
-                segment_type = data['type']
-                segment_data = data['data']
-                if segment_type in ['image', 'video', 'record']:
-                    # 图片/视频/语音消息段
-                    if 'file' in segment_data and isinstance(segment_data['file'], bytes):
-                        import base64
-                        try:
-                            segment_data['file'] = base64.b64encode(segment_data['file']).decode('utf-8')
-                        except Exception:
-                            segment_data['file'] = ''
             return {key: self._clean_for_serialization(value) for key, value in data.items()}
         elif isinstance(data, list):
             return [self._clean_for_serialization(item) for item in data]
         else:
-            # 对于其他类型，转换为字符串
             return str(data)
-
+    
     def _save_persisted_data(self):
         """保存数据到持久化存储"""
         try:
-            # 保存好友数据
-            self.storage.set("sandbox:friends", self._clean_for_serialization(self.friends))
-
-            # 保存群组数据
-            self.storage.set("sandbox:groups", self._clean_for_serialization(self.groups))
-
-            # 保存消息数据（只保存最近 1000 条）
-            messages_to_save = self.messages[-1000:] if len(self.messages) > 1000 else self.messages
-            # 清理消息数据，确保可以序列化
+            # 保存用户消息（每个用户最多保留1000条）
+            messages_to_save = {}
+            for user_id, msgs in self.user_messages.items():
+                messages_to_save[user_id] = msgs[-1000:] if len(msgs) > 1000 else msgs
+            
             messages_to_save = self._clean_for_serialization(messages_to_save)
-            self.storage.set("sandbox:messages", messages_to_save)
-
-            self.logger.info(f"保存了 {len(messages_to_save)} 条消息")
+            self.storage.set("sandbox:user_messages", messages_to_save)
+            
+            total_messages = sum(len(msgs) for msgs in messages_to_save.values())
+            self.logger.debug(f"保存了 {total_messages} 条消息")
         except Exception as e:
             self.logger.error(f"保存数据失败: {e}")
             import traceback
             self.logger.error(f"详细错误: {traceback.format_exc()}")
     
-    def _init_default_data(self):
-        """初始化默认数据"""
-        # 只有在没有持久化数据时才添加默认数据
-        if not self.friends:
-            # 添加默认好友
-            self.friends["eris"] = {
-                "id": "eris",
-                "name": "Eris Greyrat (艾莉丝·格雷拉特)",
-                "avatar": ""
-            }
-            self.friends["roxy"] = {
-                "id": "roxy",
-                "name": "Roxy Migurdia (洛琪希·米格路迪亚)",
-                "avatar": ""
-            }
-            # 保存默认好友
-            self._save_persisted_data()
-        
-        if not self.groups:
-            # 添加默认群组
-            self.groups["grayrat_house"] = {
-                "id": "grayrat_house",
-                "name": "格雷拉特家",
-                "members": ["eris", "roxy", "ruphyne"]
-            }
-            # 保存默认群组
-            self._save_persisted_data()
-    
     async def call_api(self, endpoint: str, **params):
         """调用沙箱API"""
-
+        
         if endpoint == "send_msg":
-            # 处理发送消息
+            # 处理发送消息（Bot发送给用户）
             target_type = params.get("target_type", "user")
             target_id = params.get("target_id", "")
             message_type = params.get("message_type", "text")
@@ -531,200 +467,34 @@ class SandboxAdapter(sdk.BaseAdapter):
             reply_message_id = params.get("reply_message_id", None)
             
             # 构建消息段数组（OneBot12 格式）
-            message_segments = []
+            message_segments = self._build_message_segments(
+                message_type, content, at_user_ids, at_all, reply_message_id
+            )
             
-            # 根据消息类型构建消息段
-            if message_type == "text":
-                message_segments = [{"type": "text", "data": {"text": content}}]
-                display_text = content
-            elif message_type == "image":
-                message_segments = [{"type": "image", "data": {"file": content}}]
-                display_text = f"[图片: {content}]"
-            elif message_type == "face":
-                message_segments = [{"type": "face", "data": {"id": content}}]
-                display_text = f"[表情: {content}]"
-            elif message_type == "recall":
-                message_segments = [{"type": "text", "data": {"text": "[消息已撤回]"}}]
-                display_text = "[消息已撤回]"
-            elif message_type == "raw_ob12":
-                # 原始 OneBot12 格式消息
-                if isinstance(content, list):
-                    message_segments = content
-                    display_text = "[原始消息]"
-                elif isinstance(content, dict):
-                    message_segments = [content]
-                    display_text = "[原始消息]"
-                else:
-                    message_segments = [{"type": "text", "data": {"text": str(content)}}]
-                    display_text = str(content)
-            elif message_type == "at":
-                message_segments = [
-                    {"type": "mention", "data": {"user_id": content}},
-                    {"type": "text", "data": {"text": " "}}
-                ]
-                display_text = f"@{content} "
-            elif message_type == "mention_all":
-                message_segments = [
-                    {"type": "mention_all", "data": {}},
-                    {"type": "text", "data": {"text": " "}}
-                ]
-                display_text = "@全体成员 "
-            elif message_type == "reply":
-                message_segments = [
-                    {"type": "reply", "data": {"message_id": content}},
-                    {"type": "text", "data": {"text": " "}}
-                ]
-                display_text = f"[回复: {content}] "
-            elif message_type == "json":
-                message_segments = [{"type": "json", "data": {"data": content}}]
-                display_text = "[JSON消息]"
-            elif message_type == "xml":
-                message_segments = [{"type": "xml", "data": {"data": content}}]
-                display_text = "[XML消息]"
-            elif message_type == "html":
-                message_segments = [{"type": "html", "data": {"data": content}}]
-                display_text = "[HTML消息]"
-            elif message_type == "markdown":
-                message_segments = [{"type": "markdown", "data": {"data": content}}]
-                display_text = "[Markdown消息]"
-            elif message_type == "record":
-                message_segments = [{"type": "record", "data": {"file": content}}]
-                display_text = f"[语音: {content}]"
-            elif message_type == "video":
-                message_segments = [{"type": "video", "data": {"file": content}}]
-                display_text = f"[视频: {content}]"
-            elif message_type == "dice":
-                import random
-                dice_value = random.randint(1, 6)
-                message_segments = [{"type": "dice", "data": {"result": str(dice_value)}}]
-                display_text = f"🎲 {dice_value}"
-            elif message_type == "rps":
-                import random
-                rps_types = ["石头", "剪刀", "布"]
-                rps_value = random.choice(rps_types)
-                message_segments = [{"type": "rps", "data": {"result": rps_value}}]
-                display_text = f"✊ {rps_value}"
-            elif message_type == "location":
-                if isinstance(content, dict):
-                    lat = content.get("lat", 0)
-                    lon = content.get("lon", 0)
-                    title = content.get("title", "位置")
-                    location_data = {
-                        "lat": lat,
-                        "lon": lon,
-                        "title": title
-                    }
-                    message_segments = [{"type": "location", "data": location_data}]
-                    display_text = f"[位置: {title}]"
-                else:
-                    message_segments = [{"type": "text", "data": {"text": str(content)}}]
-                    display_text = str(content)
-            elif message_type == "poke":
-                if isinstance(content, dict):
-                    user_id = content.get("user_id", "")
-                    message_segments = [{"type": "poke", "data": content}]
-                    display_text = f"[戳一戳: {user_id}]"
-                else:
-                    message_segments = [{"type": "text", "data": {"text": str(content)}}]
-                    display_text = str(content)
-            elif message_type == "share":
-                if isinstance(content, dict):
-                    url = content.get("url", "")
-                    title = content.get("title", "链接分享")
-                    share_data = {
-                        "url": url,
-                        "title": title,
-                        "content": content.get("content", title),
-                        "image": content.get("image", "")
-                    }
-                    message_segments = [{"type": "share", "data": share_data}]
-                    display_text = f"[分享: {title}]"
-                else:
-                    message_segments = [{"type": "text", "data": {"text": str(content)}}]
-                    display_text = str(content)
-            elif message_type == "music":
-                if isinstance(content, dict):
-                    music_data = content
-                    title = music_data.get("title", "未知音乐")
-                    message_segments = [{"type": "music", "data": music_data}]
-                    display_text = f"[音乐分享: {title}]"
-                else:
-                    message_segments = [{"type": "text", "data": {"text": str(content)}}]
-                    display_text = str(content)
-            else:
-                # 默认文本消息
-                message_segments = [{"type": "text", "data": {"text": content}}]
-                display_text = content
-
-            # 在消息段前插入链式修饰器（@、@全体、回复）
-            final_segments = []
-            
-            # 先添加回复
-            if reply_message_id:
-                final_segments.append({
-                    "type": "reply",
-                    "data": {"message_id": reply_message_id}
-                })
-                final_segments.append({
-                    "type": "text",
-                    "data": {"text": " "}
-                })
-            
-            # 添加@全体
-            if at_all:
-                final_segments.append({
-                    "type": "mention_all",
-                    "data": {}
-                })
-                final_segments.append({
-                    "type": "text",
-                    "data": {"text": " "}
-                })
-            
-            # 添加@用户列表
-            for user_id in at_user_ids:
-                final_segments.append({
-                    "type": "mention",
-                    "data": {"user_id": user_id}
-                })
-                final_segments.append({
-                    "type": "text",
-                    "data": {"text": " "}
-                })
-            
-            # 添加原始消息段
-            final_segments.extend(message_segments)
-
             # 构建消息
             message = {
                 "type": "message",
-                "message_type": "private" if target_type == "user" else "group",
-                "user_id": self.self_id,
+                "message_type": "private",
+                "user_id": self.self_id,  # Bot的ID
                 "user_name": "机器人",
-                "message": display_text,
+                "target_id": target_id,  # 目标用户ID
+                "message": content,
                 "message_type_detail": message_type,
-                "message_segments": final_segments,
+                "message_segments": message_segments,
                 "timestamp": int(time.time())
             }
-
-            # 记录目标信息（私聊需要知道发给谁）
-            if target_type == "user":
-                # 私聊消息，记录目标用户ID
-                message["target_id"] = target_id
-            else:
-                # 群聊消息
-                message["group_id"] = target_id
-                message["group_name"] = self.groups.get(target_id, {}).get("name", "")
-
-            # 清理消息数据，确保可以序列化
+            
+            # 清理并保存消息
             message = self._clean_for_serialization(message)
-
-            # 保存消息记录
-            self.messages.append(message)
-
+            
+            # 保存到目标用户的消息列表
+            if target_id not in self.user_messages:
+                self.user_messages[target_id] = []
+            self.user_messages[target_id].append(message)
+            
             # 持久化数据
             self._save_persisted_data()
-
+            
             # 通过 WebSocket 发送到网页
             await self._broadcast_to_web({
                 "type": "message",
@@ -734,26 +504,9 @@ class SandboxAdapter(sdk.BaseAdapter):
             return {
                 "status": "ok",
                 "retcode": 0,
-                "data": {"message_id": str(len(self.messages))},
-                "message_id": str(len(self.messages)),
+                "data": {"message_id": str(len(self.user_messages.get(target_id, [])))},
+                "message_id": str(len(self.user_messages.get(target_id, []))),
                 "message": "消息发送成功",
-                "self": {"user_id": self.self_id}
-            }
-
-        elif endpoint == "clear_all_data":
-            # 清空所有数据（包括好友、群组和消息）
-            self.friends.clear()
-            self.groups.clear()
-            self.messages.clear()
-            
-            # 持久化数据
-            self._save_persisted_data()
-            
-            return {
-                "status": "ok",
-                "retcode": 0,
-                "data": None,
-                "message": "所有数据已清空",
                 "self": {"user_id": self.self_id}
             }
         
@@ -765,25 +518,114 @@ class SandboxAdapter(sdk.BaseAdapter):
             "self": {"user_id": self.self_id}
         }
     
+    def _build_message_segments(self, message_type, content, at_user_ids, at_all, reply_message_id):
+        """构建消息段数组"""
+        message_segments = []
+        
+        # 根据消息类型构建消息段
+        if message_type == "text":
+            message_segments = [{"type": "text", "data": {"text": content}}]
+        elif message_type == "image":
+            message_segments = [{"type": "image", "data": {"file": content}}]
+        elif message_type == "face":
+            message_segments = [{"type": "face", "data": {"id": content}}]
+        elif message_type == "record":
+            message_segments = [{"type": "record", "data": {"file": content}}]
+        elif message_type == "video":
+            message_segments = [{"type": "video", "data": {"file": content}}]
+        elif message_type == "dice":
+            import random
+            dice_value = random.randint(1, 6)
+            message_segments = [{"type": "dice", "data": {"result": str(dice_value)}}]
+        elif message_type == "rps":
+            import random
+            rps_types = ["石头", "剪刀", "布"]
+            rps_value = random.choice(rps_types)
+            message_segments = [{"type": "rps", "data": {"result": rps_value}}]
+        elif message_type == "location":
+            if isinstance(content, dict):
+                message_segments = [{"type": "location", "data": content}]
+            else:
+                message_segments = [{"type": "text", "data": {"text": str(content)}}]
+        elif message_type == "poke":
+            if isinstance(content, dict):
+                message_segments = [{"type": "poke", "data": content}]
+            else:
+                message_segments = [{"type": "text", "data": {"text": str(content)}}]
+        elif message_type == "share":
+            if isinstance(content, dict):
+                message_segments = [{"type": "share", "data": content}]
+            else:
+                message_segments = [{"type": "text", "data": {"text": str(content)}}]
+        elif message_type == "music":
+            if isinstance(content, dict):
+                message_segments = [{"type": "music", "data": content}]
+            else:
+                message_segments = [{"type": "text", "data": {"text": str(content)}}]
+        elif message_type == "html":
+            message_segments = [{"type": "html", "data": {"data": content}}]
+        elif message_type == "markdown":
+            message_segments = [{"type": "markdown", "data": {"data": content}}]
+        elif message_type == "json":
+            message_segments = [{"type": "json", "data": {"data": content}}]
+        elif message_type == "xml":
+            message_segments = [{"type": "xml", "data": {"data": content}}]
+        else:
+            message_segments = [{"type": "text", "data": {"text": str(content)}}]
+        
+        # 在消息段前插入链式修饰器（@、@全体、回复）
+        final_segments = []
+        
+        if reply_message_id:
+            final_segments.append({
+                "type": "reply",
+                "data": {"message_id": reply_message_id}
+            })
+            final_segments.append({
+                "type": "text",
+                "data": {"text": " "}
+            })
+        
+        if at_all:
+            final_segments.append({
+                "type": "mention_all",
+                "data": {}
+            })
+            final_segments.append({
+                "type": "text",
+                "data": {"text": " "}
+            })
+        
+        for user_id in at_user_ids:
+            final_segments.append({
+                "type": "mention",
+                "data": {"user_id": user_id}
+            })
+            final_segments.append({
+                "type": "text",
+                "data": {"text": " "}
+            })
+        
+        final_segments.extend(message_segments)
+        
+        return final_segments
+    
     async def _broadcast_to_web(self, data: Dict):
         """向所有连接的网页客户端广播消息"""
         if not self._web_connections:
             return
-
-        # 清理数据，确保可以序列化
+        
         cleaned_data = self._clean_for_serialization(data)
-
         message = json.dumps(cleaned_data, ensure_ascii=False)
         disconnected = []
-
+        
         for ws in self._web_connections:
             try:
                 await ws.send_text(message)
             except Exception as e:
                 self.logger.warning(f"向网页发送消息失败: {e}")
                 disconnected.append(ws)
-
-        # 清理断开的连接
+        
         for ws in disconnected:
             if ws in self._web_connections:
                 self._web_connections.remove(ws)
@@ -792,19 +634,17 @@ class SandboxAdapter(sdk.BaseAdapter):
         """WebSocket 处理器"""
         self._web_connections.append(websocket)
         self.logger.info("网页客户端已连接")
-
-        # 发送初始数据（清理后再发送，不包含所有消息，只发送联系人和self_id）
+        
+        # 发送初始数据
         initial_data = {
             "type": "init",
             "data": {
-                "friends": list(self.friends.values()),
-                "groups": list(self.groups.values()),
                 "self_id": self.self_id
             }
         }
         cleaned_data = self._clean_for_serialization(initial_data)
         await websocket.send_text(json.dumps(cleaned_data, ensure_ascii=False))
-
+        
         try:
             while True:
                 data = await websocket.receive_text()
@@ -824,75 +664,13 @@ class SandboxAdapter(sdk.BaseAdapter):
             msg_type = data.get("type")
             
             if msg_type == "send_message":
-                # 网页发送消息，转换为 OneBot12 事件
+                # 网页发送消息（用户发送给Bot）
                 await self._handle_send_message(data.get("data", {}))
             
-            elif msg_type == "add_friend":
-                # 添加好友
-                await self._handle_add_friend(data.get("data", {}))
-            
-            elif msg_type == "add_group":
-                # 添加群组
-                await self._handle_add_group(data.get("data", {}))
-            
-            elif msg_type == "delete_friend":
-                # 删除好友
-                await self._handle_delete_friend(data.get("data", {}))
-            
-            elif msg_type == "delete_group":
-                # 删除群组
-                await self._handle_delete_group(data.get("data", {}))
-            
-            elif msg_type == "clear_messages":
-                # 清空消息记录
-                self.messages.clear()
-
-                # 持久化数据
-                self._save_persisted_data()
-
-                await self._broadcast_to_web({"type": "messages_cleared"})
-
             elif msg_type == "load_messages":
                 # 按需加载消息
-                contact_data = data.get("data", {})
-                contact_id = contact_data.get("contact_id", "")
-                contact_type = contact_data.get("contact_type", "private")  # private 或 group
-
-                # 过滤对应聊天的消息
-                filtered_messages = []
-                for msg in self.messages:
-                    if contact_type == "private":
-                        # 私聊消息：只显示私聊消息
-                        if msg.get("message_type") != "private":
-                            continue
-
-                        # 判断消息是否属于当前聊天
-                        is_from_contact = msg.get("user_id") == contact_id  # 联系人发送的消息
-                        is_from_bot = msg.get("user_id") == self.self_id  # 机器人发送的消息
-
-                        if is_from_contact:
-                            # 联系人发送的消息，显示在这个联系人的聊天中
-                            filtered_messages.append(msg)
-                        elif is_from_bot:
-                            # 机器人发送的消息，需要判断是发给谁的
-                            target_id = msg.get("target_id") or msg.get("group_id")
-                            if target_id == contact_id:
-                                filtered_messages.append(msg)
-                    else:
-                        # 群聊：只显示该群组的消息
-                        if msg.get("group_id") == contact_id:
-                            filtered_messages.append(msg)
-
-                # 发送过滤后的消息
-                await self._broadcast_to_web({
-                    "type": "messages_loaded",
-                    "data": {
-                        "contact_id": contact_id,
-                        "contact_type": contact_type,
-                        "messages": filtered_messages
-                    }
-                })
-
+                await self._handle_load_messages(data.get("data", {}))
+            
         except json.JSONDecodeError:
             self.logger.error(f"JSON 解析失败: {raw_msg}")
         except Exception as e:
@@ -900,115 +678,54 @@ class SandboxAdapter(sdk.BaseAdapter):
     
     async def _handle_send_message(self, message_data: Dict):
         """处理网页发送的消息"""
-        message_type = message_data.get("message_type", "private")
+        user_id = message_data.get("user_id", "")
+        user_name = message_data.get("user_name", "")
         
+        # 构建原始事件
         raw_event = {
             "type": "message",
-            "message_type": message_type,
-            "user_id": message_data.get("user_id", ""),
-            "user_name": message_data.get("user_name", ""),
+            "message_type": "private",
+            "user_id": user_id,
+            "user_name": user_name,
             "message": message_data.get("message", ""),
+            "message_type_detail": message_data.get("message_type_detail", "text"),
+            "message_segments": message_data.get("message_segments", []),
+            "target_id": self.self_id,  # 发送给Bot
             "timestamp": int(time.time())
         }
         
-        # 添加消息段和消息类型详细信息
-        if "message_type_detail" in message_data:
-            raw_event["message_type_detail"] = message_data["message_type_detail"]
-        
-        if "message_segments" in message_data:
-            raw_event["message_segments"] = message_data["message_segments"]
-        
-        if message_type == "group":
-            raw_event["group_id"] = message_data.get("group_id", "")
-            raw_event["group_name"] = message_data.get("group_name", "")
-        
-        # 保存消息记录（用于新连接的初始化）
-        self.messages.append(raw_event)
+        # 保存到用户的消息列表
+        if user_id not in self.user_messages:
+            self.user_messages[user_id] = []
+        self.user_messages[user_id].append(raw_event)
         
         # 持久化数据
         self._save_persisted_data()
-        
-        # 注意：不广播到网页，因为前端已经通过乐观更新显示了
-        # 只需要转换为 OneBot12 事件并发送给模块
         
         # 转换为 OneBot12 事件并发送给模块
         onebot_event = self.convert(raw_event)
         
         if onebot_event:
-            self.logger.info(f"收到网页消息: {message_data.get('message', '')} (类型: {message_data.get('message_type_detail', 'text')})")
+            self.logger.info(f"收到网页消息: {message_data.get('message', '')} (用户: {user_name})")
             await self.adapter.emit(onebot_event)
     
-    async def _handle_add_friend(self, friend_data: Dict):
-        """添加好友"""
-        friend_id = friend_data.get("id", f"user{len(self.friends) + 1}")
-        self.friends[friend_id] = {
-            "id": friend_id,
-            "name": friend_data.get("name", f"用户{len(self.friends) + 1}"),
-            "avatar": ""
-        }
+    async def _handle_load_messages(self, load_data: Dict):
+        """处理加载消息请求"""
+        contact_id = load_data.get("contact_id", "")
+        contact_type = load_data.get("contact_type", "private")
         
-        # 持久化数据
-        self._save_persisted_data()
+        # 获取该用户的消息
+        messages = self.user_messages.get(contact_id, [])
         
+        # 发送过滤后的消息
         await self._broadcast_to_web({
-            "type": "friend_added",
-            "data": self.friends[friend_id]
+            "type": "messages_loaded",
+            "data": {
+                "contact_id": contact_id,
+                "contact_type": contact_type,
+                "messages": messages
+            }
         })
-        
-        # 发送好友添加通知事件
-        raw_event = {
-            "type": "notice",
-            "notice_type": "friend_increase",
-            "user_id": friend_id
-        }
-        onebot_event = self.convert(raw_event)
-        if onebot_event:
-            await self.adapter.emit(onebot_event)
-    
-    async def _handle_add_group(self, group_data: Dict):
-        """添加群组"""
-        group_id = group_data.get("id", f"group{len(self.groups) + 1}")
-        self.groups[group_id] = {
-            "id": group_id,
-            "name": group_data.get("name", f"测试群{len(self.groups) + 1}"),
-            "members": group_data.get("members", [])
-        }
-        
-        # 持久化数据
-        self._save_persisted_data()
-        
-        await self._broadcast_to_web({
-            "type": "group_added",
-            "data": self.groups[group_id]
-        })
-    
-    async def _handle_delete_friend(self, friend_data: Dict):
-        """删除好友"""
-        friend_id = friend_data.get("id")
-        if friend_id in self.friends:
-            del self.friends[friend_id]
-            
-            # 持久化数据
-            self._save_persisted_data()
-            
-            await self._broadcast_to_web({
-                "type": "friend_deleted",
-                "data": {"id": friend_id}
-            })
-    
-    async def _handle_delete_group(self, group_data: Dict):
-        """删除群组"""
-        group_id = group_data.get("id")
-        if group_id in self.groups:
-            del self.groups[group_id]
-            
-            # 持久化数据
-            self._save_persisted_data()
-            
-            await self._broadcast_to_web({
-                "type": "group_deleted",
-                "data": {"id": group_id}
-            })
     
     async def register_routes(self):
         """注册路由"""
@@ -1021,12 +738,10 @@ class SandboxAdapter(sdk.BaseAdapter):
         
         # 注册静态文件路由
         async def serve_index():
-            # 读取 HTML 文件
             html_file = os.path.join(os.path.dirname(__file__), "static", "index.html")
             try:
                 with open(html_file, 'r', encoding='utf-8') as f:
                     html_content = f.read()
-                # 直接返回 HTML 字符串，FastAPI 会自动设置 Content-Type
                 from fastapi.responses import HTMLResponse
                 return HTMLResponse(content=html_content, status_code=200)
             except Exception as e:
