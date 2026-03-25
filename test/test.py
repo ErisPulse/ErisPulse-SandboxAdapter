@@ -316,7 +316,8 @@ class TestRunner:
         elif test_num == 12:
             file_data = self._read_file(self.config.doc_file)
             if file_data:
-                return await self.adapter.To("user", user_id).File(file_data, self.config.doc_file)
+                return await self.adapter.To("user", user_id).File(file_data)
+            # 回退到 URL 方式
             return await self.adapter.To("user", user_id).File(self.config.file_url)
         
         # 13. 发送文件（URL）

@@ -496,58 +496,66 @@
             margin: 0 2px;
         }
 
-        .message-segment-file {
+        /* 统一的媒体卡片样式 */
+        .media-card {
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 12px 16px;
+            padding: 12px 14px;
             background: var(--bg-secondary);
             border-radius: 8px;
             margin: 4px 0;
-            cursor: pointer;
             transition: all 0.2s;
             max-width: 100%;
+            text-decoration: none;
+            color: inherit;
         }
 
-        .message-segment-file:hover {
+        .media-card:hover {
             background: var(--bubble-active);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
 
-        .message-segment-file-icon {
-            width: 48px;
-            height: 48px;
-            min-width: 48px;
+        .media-card-icon {
+            width: 44px;
+            height: 44px;
+            min-width: 44px;
             border-radius: 8px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 22px;
             color: white;
             flex-shrink: 0;
         }
 
-        .message-segment-file-info {
+        .media-card-info {
             flex: 1;
             min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
         }
 
-        .message-segment-file-name {
+        .media-card-title {
             font-weight: 500;
             color: var(--text-primary);
-            margin-bottom: 4px;
             font-size: 14px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
 
-        .message-segment-file-size {
+        .media-card-desc {
             font-size: 12px;
             color: var(--text-secondary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
-        .message-segment-file-url {
+        .media-card-meta {
             font-size: 11px;
             color: var(--text-tertiary);
             overflow: hidden;
@@ -555,54 +563,21 @@
             white-space: nowrap;
         }
 
-        .message-segment-mention {
-            color: #666;
-            font-weight: 500;
-            padding: 2px 6px;
-            background: var(--bubble-active);
-            border-radius: 4px;
-            margin: 0 2px;
+        /* 各类型卡片特定样式 */
+        .message-segment-file {
+            color: var(--text-primary);
         }
 
-        .message-segment-mention-all {
-            color: #666;
-            font-weight: 500;
-            padding: 2px 6px;
-            background: var(--bubble-active);
-            border-radius: 4px;
-            margin: 0 2px;
-        }
-
-        .message-segment-reply {
-            padding: 6px 10px;
-            background: var(--bg-secondary);
-            border-left: 3px solid var(--bubble-active);
-            border-radius: 4px;
-            margin: 4px 0;
-            font-size: 13px;
-            color: var(--text-secondary);
+        .message-segment-file .media-card-icon {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
 
         .message-segment-record {
-            padding: 8px 12px;
-            background: var(--bg-secondary);
-            border-radius: 8px;
-            margin: 4px 0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            color: var(--text-primary);
         }
 
-        .message-segment-record-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: var(--bubble-active);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 14px;
+        .message-segment-record .media-card-icon {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         }
 
         .message-segment-video {
@@ -614,99 +589,60 @@
             display: block;
         }
 
-        .message-segment-dice,
-        .message-segment-rps {
-            font-size: 24px;
-            padding: 4px 8px;
-            display: inline-block;
-        }
-
         .message-segment-location {
-            padding: 8px 12px;
-            background: var(--bg-secondary);
-            border-radius: 8px;
-            margin: 4px 0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .message-segment-location-icon {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: #4CAF50;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-        }
-
-        .message-segment-location-info {
-            flex: 1;
-        }
-
-        .message-segment-location-title {
-            font-weight: 500;
             color: var(--text-primary);
-            margin-bottom: 2px;
-            font-size: 13px;
         }
 
-        .message-segment-location-coords {
-            font-size: 11px;
-            color: var(--text-secondary);
+        .message-segment-location .media-card-icon {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
         }
 
         .message-segment-share {
-            padding: 8px 12px;
+            color: var(--text-primary);
+        }
+
+        .message-segment-share .media-card-icon {
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+        }
+
+        .message-segment-dice,
+        .message-segment-rps {
+            font-size: 32px;
+            padding: 6px 12px;
+            display: inline-block;
+            margin: 4px 0;
             background: var(--bg-secondary);
             border-radius: 8px;
-            margin: 4px 0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            text-decoration: none;
-            color: inherit;
         }
 
-        .message-segment-share:hover {
-            background: var(--bubble-active);
-        }
-
-        .message-segment-share-icon {
-            width: 28px;
-            height: 28px;
-            border-radius: 8px;
-            background: #2196F3;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            color: white;
-        }
-
-        .message-segment-share-info {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .message-segment-share-title {
-            font-weight: 500;
+        .message-segment-mention {
             color: var(--text-primary);
-            margin-bottom: 2px;
+            font-weight: 500;
+            padding: 3px 8px;
+            background: var(--bubble-active);
+            border-radius: 6px;
+            margin: 0 2px;
             font-size: 13px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
         }
 
-        .message-segment-share-url {
-            font-size: 11px;
+        .message-segment-mention-all {
+            color: var(--text-primary);
+            font-weight: 500;
+            padding: 3px 8px;
+            background: var(--bubble-active);
+            border-radius: 6px;
+            margin: 0 2px;
+            font-size: 13px;
+        }
+
+        .message-segment-reply {
+            padding: 8px 12px;
+            background: var(--bg-secondary);
+            border-left: 3px solid var(--bubble-active);
+            border-radius: 4px;
+            margin: 4px 0;
+            font-size: 13px;
             color: var(--text-secondary);
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
         }
 
         .message-segment-html-content {
@@ -850,6 +786,10 @@
             background-color: var(--bg-secondary);
             border-top: 1px solid var(--border-color);
             flex-shrink: 0;
+        }
+
+        .input-controls {
+            width: 100%;
         }
 
         .message-type-bubbles {
@@ -1156,6 +1096,111 @@
             position: relative;
         }
 
+        /* 文件上传按钮 */
+        .file-upload-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-primary);
+            transition: all 0.2s;
+            flex-shrink: 0;
+            font-size: 20px;
+        }
+
+        .file-upload-btn:hover {
+            border-color: var(--bubble-active);
+            background: var(--bg-secondary);
+        }
+
+        /* 图片查看模态框 */
+        .image-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            cursor: zoom-out;
+        }
+
+        .image-modal.show {
+            display: flex;
+        }
+
+        .image-modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .image-modal-content img {
+            max-width: 100%;
+            max-height: 100vh;
+            border-radius: 8px;
+        }
+
+        /* 音频播放器样式 */
+        .audio-player-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            max-width: 250px;
+        }
+
+        .audio-player-container:hover {
+            background: var(--bubble-active);
+        }
+
+        .audio-play-btn {
+            width: 36px;
+            height: 36px;
+            min-width: 36px;
+            border-radius: 50%;
+            background: var(--bubble-active);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: var(--text-primary);
+            flex-shrink: 0;
+        }
+
+        .audio-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .audio-title {
+            font-weight: 500;
+            color: var(--text-primary);
+            font-size: 14px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .audio-status {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            margin-top: 2px;
+        }
+
         /* 响应式 */
         @media (max-width: 768px) {
             .header-left {
@@ -1433,22 +1478,32 @@
                     </div>
                 </div>
                 <div class="chat-input-area">
-                    <div class="message-type-bubbles" id="messageTypeBubbles">
-                        <div class="type-bubble active" data-type="text">文本</div>
-                        <div class="type-bubble" data-type="image">图片</div>
-                        <div class="type-bubble" data-type="record">语音</div>
-                        <div class="type-bubble" data-type="video">视频</div>
-                        <div class="type-bubble" data-type="at">@用户</div>
-                        <div class="type-bubble" data-type="html">HTML</div>
-                        <div class="type-bubble" data-type="markdown">Markdown</div>
-                    </div>
+                    <div class="input-controls">
+                        <div class="message-type-bubbles" id="messageTypeBubbles">
+                    <div class="type-bubble active" data-type="text">文本</div>
+                    <div class="type-bubble" data-type="image">图片</div>
+                    <div class="type-bubble" data-type="record">语音</div>
+                    <div class="type-bubble" data-type="video">视频</div>
+                    <div class="type-bubble" data-type="file">文件</div>
+                    <div class="type-bubble" data-type="at">@用户</div>
+                    <div class="type-bubble" data-type="html">HTML</div>
+                    <div class="type-bubble" data-type="markdown">Markdown</div>
+                </div>
                     <div class="input-wrapper">
                         <div class="autocomplete-dropdown" id="autocompleteDropdown"></div>
                         <textarea class="input-field" id="messageInput" placeholder="输入消息..." disabled></textarea>
                         <button class="btn-send" id="btnSend" disabled>发送</button>
+                        <button class="file-upload-btn" id="btnFileUpload" title="上传文件">📎</button>
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- 图片查看模态框 -->
+    <div class="image-modal" id="imageModal">
+        <div class="image-modal-content">
+            <img id="imageModalImg" alt="图片预览">
         </div>
     </div>
 
@@ -1507,6 +1562,9 @@
         const btnHamburger = document.getElementById('btnHamburger');
         const sidebarOverlay = document.getElementById('sidebarOverlay');
         const sidebar = document.querySelector('.sidebar');
+        const btnFileUpload = document.getElementById('btnFileUpload');
+        const imageModal = document.getElementById('imageModal');
+        const imageModalImg = document.getElementById('imageModalImg');
 
         // 生成用户ID
         function generateUserId() {
@@ -1803,110 +1861,6 @@
             return escapeHtml(msg.message || '');
         }
 
-        // 渲染单个消息段
-        function renderMessageSegment(segment) {
-            const type = segment.type || 'text';
-            const data = segment.data || {};
-            
-            switch (type) {
-                case 'text':
-                    return `<span class="message-segment">${escapeHtml(data.text || '')}</span>`;
-                    
-                case 'image':
-                    let imageUrl = data.file || data.url || '';
-                    const isBase64 = imageUrl.startsWith('data:image') || imageUrl.match(/^[A-Za-z0-9+/]+=*$/);
-                    if (isBase64 && !imageUrl.startsWith('data:image')) {
-                        imageUrl = `data:image/png;base64,${imageUrl}`;
-                    }
-                    return `<img src="${escapeHtml(imageUrl)}" alt="图片" class="message-segment-image">`;
-                    
-                case 'face':
-                    return `<span class="message-segment-face">😊</span>`;
-                    
-                case 'mention':
-                    return `<span class="message-segment-mention">@${escapeHtml(data.user_id || '')}</span>`;
-                    
-                case 'mention_all':
-                    return `<span class="message-segment-mention-all">@全体成员</span>`;
-                    
-                case 'reply':
-                    return `<div class="message-segment-reply">回复: ${escapeHtml(data.message_id || '')}</div>`;
-                    
-                case 'record':
-                    return `
-                        <div class="message-segment-record">
-                            <div class="message-segment-record-icon">🎵</div>
-                            <div>语音消息</div>
-                        </div>
-                    `;
-                    
-                case 'video':
-                    let videoUrl = data.file || data.url || '';
-                    const isVideoBase64 = videoUrl.startsWith('data:video') || videoUrl.match(/^[A-Za-z0-9+/]+=*$/);
-                    if (isVideoBase64 && !videoUrl.startsWith('data:video')) {
-                        videoUrl = `data:video/mp4;base64,${videoUrl}`;
-                    }
-                    return `<video src="${escapeHtml(videoUrl)}" controls class="message-segment-video"></video>`;
-                    
-                case 'dice':
-                    const diceResult = data.result || '1';
-                    const diceEmoji = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'][parseInt(diceResult) - 1] || '🎲';
-                    return `<span class="message-segment-dice">${diceEmoji}</span>`;
-                    
-                case 'rps':
-                    const rpsResult = data.result || '石头';
-                    const rpsEmoji = {'石头': '✊', '剪刀': '✌️', '布': '✋'}[rpsResult] || '✊';
-                    return `<span class="message-segment-rps">${rpsEmoji}</span>`;
-                    
-                case 'location':
-                    return `
-                        <div class="message-segment-location">
-                            <div class="message-segment-location-icon">📍</div>
-                            <div class="message-segment-location-info">
-                                <div class="message-segment-location-title">${escapeHtml(data.title || '位置')}</div>
-                                <div class="message-segment-location-coords">${escapeHtml(data.lat || 0)}, ${escapeHtml(data.lon || 0)}</div>
-                            </div>
-                        </div>
-                    `;
-                    
-                case 'share':
-                    return `
-                        <a href="${escapeHtml(data.url || '')}" target="_blank" class="message-segment-share">
-                            <div class="message-segment-share-icon">🔗</div>
-                            <div class="message-segment-share-info">
-                                <div class="message-segment-share-title">${escapeHtml(data.title || '链接')}</div>
-                                <div class="message-segment-share-url">${escapeHtml(data.url || '')}</div>
-                            </div>
-                        </a>
-                    `;
-                    
-                case 'html':
-                    return `<div class="message-segment-html-content">${data.data || ''}</div>`;
-                    
-                case 'markdown':
-                    const markdownText = data.data || '';
-                    const renderedMarkdown = marked.parse(markdownText);
-                    return `<div class="message-segment-markdown"><div class="markdown-content">${renderedMarkdown}</div></div>`;
-                    
-                case 'file':
-                    let fileUrl = data.file || data.url || '';
-                    const fileName = data.name || '未命名文件';
-                    const fileSize = data.size ? formatFileSize(data.size) : '';
-                    return `
-                        <a href="${escapeHtml(fileUrl)}" target="_blank" class="message-segment-file">
-                            <div class="message-segment-file-icon">📄</div>
-                            <div class="message-segment-file-info">
-                                <div class="message-segment-file-name">${escapeHtml(fileName)}</div>
-                                ${fileSize ? `<div class="message-segment-file-size">${escapeHtml(fileSize)}</div>` : ''}
-                                ${fileUrl ? `<div class="message-segment-file-url">${escapeHtml(fileUrl)}</div>` : ''}
-                            </div>
-                        </a>
-                    `;
-                    
-                default:
-                    return `<span class="message-segment">[${escapeHtml(type)}消息]</span>`;
-            }
-        }
 
         // HTML 转义
         function escapeHtml(text) {
@@ -2157,6 +2111,7 @@
                     'image': '输入图片URL...',
                     'record': '输入语音文件URL...',
                     'video': '输入视频URL...',
+                    'file': '输入文件URL...',
                     'at': '输入要@的用户ID...',
                     'html': '输入HTML代码...',
                     'markdown': '输入Markdown文本...'
@@ -2366,6 +2321,180 @@
                 }
             }
         }
+
+        // 文件上传处理
+        function handleFileUpload(file) {
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const base64 = e.target.result;
+                messageInput.value = base64;
+                messageInput.focus();
+            };
+            reader.onerror = () => {
+                alert('文件读取失败，请重试');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // 图片查看模态框
+        function showImageModal(src) {
+            imageModalImg.src = src;
+            imageModal.classList.add('show');
+        }
+
+        function hideImageModal() {
+            imageModal.classList.remove('show');
+            imageModalImg.src = '';
+        }
+
+        // 语音播放控制
+        function toggleAudioPlayer(audioElement, containerElement, playBtn) {
+            if (audioElement.paused) {
+                audioElement.play();
+                playBtn.textContent = '⏸️';
+            } else {
+                audioElement.pause();
+                playBtn.textContent = '▶️';
+            }
+        }
+
+        // 文件上传按钮点击事件
+        btnFileUpload.addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '*/*';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    handleFileUpload(file);
+                }
+            };
+            input.click();
+        });
+
+        // 图片模态框点击关闭
+        imageModal.addEventListener('click', hideImageModal);
+
+        // 优化后的消息段渲染
+        function renderMessageSegmentOptimized(segment) {
+            const type = segment.type || 'text';
+            const data = segment.data || {};
+            
+            switch (type) {
+                case 'text':
+                    return `<span class="message-segment">${escapeHtml(data.text || '')}</span>`;
+                    
+                case 'image':
+                    let imageUrl = data.file || data.url || '';
+                    const isImageBase64 = imageUrl.startsWith('data:image') || imageUrl.match(/^[A-Za-z0-9+/]+=*$/);
+                    if (isImageBase64 && !imageUrl.startsWith('data:image')) {
+                        imageUrl = `data:image/png;base64,${imageUrl}`;
+                    }
+                    return `<img src="${escapeHtml(imageUrl)}" alt="图片" class="message-segment-image" onclick="showImageModal('${escapeHtml(imageUrl)}')">`;
+                    
+                case 'face':
+                    return `<span class="message-segment-face">😊</span>`;
+                    
+                case 'mention':
+                    return `<span class="message-segment-mention">@${escapeHtml(data.user_id || '')}</span>`;
+                    
+                case 'mention_all':
+                    return `<span class="message-segment-mention-all">@全体成员</span>`;
+                    
+                case 'reply':
+                    return `<div class="message-segment-reply">回复: ${escapeHtml(data.message_id || '')}</div>`;
+                    
+                case 'record':
+                    const recordUrl = data.file || '';
+                    const uniqueId = Math.random().toString(36).substr(2, 9);
+                    return `
+                        <div class="audio-player-container" onclick="toggleAudioPlayer(document.getElementById('audio-${uniqueId}'), this, this.querySelector('.audio-play-btn'))">
+                            <audio id="audio-${uniqueId}" src="${escapeHtml(recordUrl)}" style="display:none"></audio>
+                            <div class="audio-play-btn">▶️</div>
+                            <div class="audio-info">
+                                <div class="audio-title">语音消息</div>
+                                <div class="audio-status">点击播放</div>
+                            </div>
+                        </div>
+                    `;
+                    
+                case 'video':
+                    let videoUrl = data.file || data.url || '';
+                    const isVideoBase64 = videoUrl.startsWith('data:video') || videoUrl.match(/^[A-Za-z0-9+/]+=*$/);
+                    if (isVideoBase64 && !videoUrl.startsWith('data:video')) {
+                        videoUrl = `data:video/mp4;base64,${videoUrl}`;
+                    }
+                    return `<video src="${escapeHtml(videoUrl)}" controls class="message-segment-video"></video>`;
+                    
+                case 'dice':
+                    const diceResult = data.result || '1';
+                    const diceEmoji = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'][parseInt(diceResult) - 1] || '🎲';
+                    return `<span class="message-segment-dice">${diceEmoji}</span>`;
+                    
+                case 'rps':
+                    const rpsResult = data.result || '石头';
+                    const rpsEmoji = {'石头': '✊', '剪刀': '✌️', '布': '✋'}[rpsResult] || '✊';
+                    return `<span class="message-segment-rps">${rpsEmoji}</span>`;
+                    
+                case 'location':
+                    const lat = data.lat || 0;
+                    const lon = data.lon || 0;
+                    const locationTitle = data.title || '位置';
+                    return `
+                        <div class="media-card message-segment-location">
+                            <div class="media-card-icon">📍</div>
+                            <div class="media-card-info">
+                                <div class="media-card-title">${escapeHtml(locationTitle)}</div>
+                                <div class="media-card-desc">纬度: ${escapeHtml(lat)}, 经度: ${escapeHtml(lon)}</div>
+                            </div>
+                        </div>
+                    `;
+                    
+                case 'share':
+                    const shareTitle = data.title || '链接';
+                    const shareContent = data.content || shareTitle;
+                    return `
+                        <a href="${escapeHtml(data.url || '')}" target="_blank" class="media-card message-segment-share">
+                            <div class="media-card-icon">🔗</div>
+                            <div class="media-card-info">
+                                <div class="media-card-title">${escapeHtml(shareTitle)}</div>
+                                <div class="media-card-desc">${escapeHtml(shareContent)}</div>
+                            </div>
+                        </a>
+                    `;
+                    
+                case 'html':
+                    return `<div class="message-segment-html-content">${data.data || ''}</div>`;
+                    
+                case 'markdown':
+                    const markdownText = data.data || '';
+                    const renderedMarkdown = marked.parse(markdownText);
+                    return `<div class="message-segment-markdown"><div class="markdown-content">${renderedMarkdown}</div></div>`;
+                    
+                case 'file':
+                    let fileUrl = data.file || data.url || '';
+                    const fileName = data.name || '未命名文件';
+                    const fileSize = data.size ? formatFileSize(data.size) : '';
+                    return `
+                        <a href="${escapeHtml(fileUrl)}" target="_blank" class="media-card message-segment-file">
+                            <div class="media-card-icon">📄</div>
+                            <div class="media-card-info">
+                                <div class="media-card-title">${escapeHtml(fileName)}</div>
+                                ${fileSize ? `<div class="media-card-desc">${escapeHtml(fileSize)}</div>` : ''}
+                                ${fileUrl ? `<div class="media-card-meta">${escapeHtml(fileUrl)}</div>` : ''}
+                            </div>
+                        </a>
+                    `;
+                    
+                default:
+                    return `<span class="message-segment">[${escapeHtml(type)}消息]</span>`;
+            }
+        }
+
+        // 替换原来的renderMessageSegment函数
+        renderMessageSegment = renderMessageSegmentOptimized;
 
         // 初始化
         initApp();
