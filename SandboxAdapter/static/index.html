@@ -1888,6 +1888,21 @@
                     const renderedMarkdown = marked.parse(markdownText);
                     return `<div class="message-segment-markdown"><div class="markdown-content">${renderedMarkdown}</div></div>`;
                     
+                case 'file':
+                    let fileUrl = data.file || data.url || '';
+                    const fileName = data.name || '未命名文件';
+                    const fileSize = data.size ? formatFileSize(data.size) : '';
+                    return `
+                        <a href="${escapeHtml(fileUrl)}" target="_blank" class="message-segment-file">
+                            <div class="message-segment-file-icon">📄</div>
+                            <div class="message-segment-file-info">
+                                <div class="message-segment-file-name">${escapeHtml(fileName)}</div>
+                                ${fileSize ? `<div class="message-segment-file-size">${escapeHtml(fileSize)}</div>` : ''}
+                                ${fileUrl ? `<div class="message-segment-file-url">${escapeHtml(fileUrl)}</div>` : ''}
+                            </div>
+                        </a>
+                    `;
+                    
                 default:
                     return `<span class="message-segment">[${escapeHtml(type)}消息]</span>`;
             }
@@ -1899,6 +1914,15 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        // 格式化文件大小
+        function formatFileSize(bytes) {
+            if (!bytes || bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
 
         // 格式化消息时间
