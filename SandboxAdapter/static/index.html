@@ -833,7 +833,7 @@
         .input-wrapper {
             display: flex;
             gap: 10px;
-            align-items: flex-end;
+            align-items: center;
         }
 
         .input-field {
@@ -990,23 +990,306 @@
             line-height: 1.5;
         }
 
+        /* 汉堡菜单按钮 */
+        .btn-hamburger {
+            display: none;
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-primary);
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .btn-hamburger:hover {
+            border-color: var(--bubble-active);
+            background: var(--bg-secondary);
+        }
+
+        .btn-hamburger svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 遮罩层 */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .overlay.show {
+            display: block;
+            opacity: 1;
+        }
+
+        /* 命令自动补全 */
+        .autocomplete-dropdown {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            width: 100%;
+            max-height: 300px;
+            overflow-y: auto;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 100;
+            margin-bottom: 8px;
+        }
+
+        .autocomplete-dropdown.show {
+            display: block;
+        }
+
+        .autocomplete-item {
+            padding: 10px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+            transition: background 0.2s;
+        }
+
+        .autocomplete-item:last-child {
+            border-bottom: none;
+        }
+
+        .autocomplete-item:hover,
+        .autocomplete-item.active {
+            background: var(--bubble-active);
+        }
+
+        .autocomplete-item-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .autocomplete-item-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .autocomplete-item-usage {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            margin-top: 2px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
         /* 响应式 */
         @media (max-width: 768px) {
+            .header-left {
+                gap: 8px;
+            }
+
+            .header h1 {
+                font-size: 14px;
+            }
+
+            .status {
+                font-size: 11px;
+                padding: 4px 8px;
+            }
+
+            .btn-hamburger {
+                display: flex;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100%;
+                width: 280px;
+                z-index: 1000;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main {
+                position: relative;
+            }
+
             .message {
-                max-width: 85%;
+                max-width: 90%;
+                padding: 10px 14px;
+            }
+
+            .message-content {
+                font-size: 13px;
+            }
+
+            .chat-header {
+                padding: 10px 16px;
+            }
+
+            .chat-header h2 {
+                font-size: 13px;
+            }
+
+            .chat-messages {
+                padding: 12px 16px;
+                gap: 10px;
             }
 
             .chat-input-area {
                 padding: 12px 16px;
             }
 
+            .message-type-bubbles {
+                margin-bottom: 10px;
+                padding-bottom: 4px;
+            }
+
             .type-bubble {
                 padding: 6px 12px;
+                font-size: 12px;
+            }
+
+            .input-wrapper {
+                gap: 8px;
+            }
+
+            .input-field {
+                min-height: 60px;
+                max-height: 150px;
+                padding: 10px 14px;
+                font-size: 14px;
+            }
+
+            .btn-send {
+                padding: 10px 20px;
+                min-width: 70px;
+                font-size: 13px;
+            }
+
+            .sidebar-user-item {
+                padding: 12px 14px;
+            }
+
+            .sidebar-user-avatar {
+                width: 40px;
+                height: 40px;
+                font-size: 15px;
+            }
+
+            .sidebar-user-name {
+                font-size: 14px;
+            }
+
+            .sidebar-user-id {
+                font-size: 12px;
+            }
+
+            .modal-content {
+                width: 95%;
+                padding: 20px;
+                margin: 20px;
+            }
+
+            .modal-content h3 {
+                font-size: 16px;
+            }
+
+            .setup-card {
+                padding: 30px 24px;
+            }
+
+            .setup-card h1 {
+                font-size: 20px;
+            }
+
+            .btn-delete-user {
+                opacity: 1;
+                width: 28px;
+                height: 28px;
+            }
+
+            .message-segment-image,
+            .message-segment-video {
+                max-height: 180px;
+            }
+
+            .markdown-content h1 {
+                font-size: 1.2em;
+            }
+
+            .markdown-content h2 {
+                font-size: 1.1em;
+            }
+
+            .markdown-content pre code {
+                font-size: 11px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 12px;
+            }
+
+            .status {
+                font-size: 10px;
+                padding: 3px 6px;
+            }
+
+            .chat-messages {
+                padding: 10px 12px;
+            }
+
+            .chat-input-area {
+                padding: 10px 12px;
+            }
+
+            .type-bubble {
+                padding: 5px 10px;
                 font-size: 11px;
             }
 
+            .btn-send {
+                padding: 8px 16px;
+                min-width: 60px;
+                font-size: 12px;
+            }
+
             .sidebar {
-                width: 200px;
+                width: 260px;
+            }
+
+            .setup-card {
+                padding: 24px 20px;
+            }
+
+            .setup-card h1 {
+                font-size: 18px;
+            }
+
+            .setup-card p {
+                font-size: 13px;
             }
         }
     </style>
@@ -1029,6 +1312,11 @@
     <div class="main-app" id="mainApp">
         <div class="header">
             <div class="header-left">
+                <button class="btn-hamburger" id="btnHamburger" aria-label="菜单">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+                    </svg>
+                </button>
                 <h1>沙箱</h1>
             </div>
             <div class="header-right">
@@ -1071,6 +1359,7 @@
                         <div class="type-bubble" data-type="markdown">Markdown</div>
                     </div>
                     <div class="input-wrapper">
+                        <div class="autocomplete-dropdown" id="autocompleteDropdown"></div>
                         <textarea class="input-field" id="messageInput" placeholder="输入消息..." disabled></textarea>
                         <button class="btn-send" id="btnSend" disabled>发送</button>
                     </div>
@@ -1094,6 +1383,9 @@
         </div>
     </div>
 
+    <!-- 侧边栏遮罩层 -->
+    <div class="overlay" id="sidebarOverlay"></div>
+
     <script>
         // 应用状态
         let currentUser = null;
@@ -1103,8 +1395,15 @@
         let ws = null;
         let selfId = '';
         let currentMessageType = 'text';
+        
+        // 命令自动补全
+        let commands = [];
+        let commandPrefix = '/';
+        let autocompleteIndex = -1;
+        let autocompleteItems = [];
 
         // DOM 元素
+        const autocompleteDropdown = document.getElementById('autocompleteDropdown');
         const setupPage = document.getElementById('setupPage');
         const mainApp = document.getElementById('mainApp');
         const setupUserName = document.getElementById('setupUserName');
@@ -1121,6 +1420,9 @@
         const newUserName = document.getElementById('newUserName');
         const btnCancelAddUser = document.getElementById('btnCancelAddUser');
         const btnConfirmAddUser = document.getElementById('btnConfirmAddUser');
+        const btnHamburger = document.getElementById('btnHamburger');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const sidebar = document.querySelector('.sidebar');
 
         // 生成用户ID
         function generateUserId() {
@@ -1154,11 +1456,36 @@
             }
         }
 
+        // 打开侧边栏
+        function openSidebar() {
+            sidebar.classList.add('open');
+            sidebarOverlay.classList.add('show');
+        }
+
+        // 关闭侧边栏
+        function closeSidebar() {
+            sidebar.classList.remove('open');
+            sidebarOverlay.classList.remove('show');
+        }
+
         // 初始化应用
         function initApp() {
             loadUserData();
             
+            // 检查用户数据一致性
             if (currentUser) {
+                // 验证 currentUser 是否在 users 数组中
+                const userExists = users.some(u => u.id === currentUser.id);
+                if (!userExists) {
+                    // 如果 currentUser 不在 users 中，添加它
+                    users.push(currentUser);
+                    saveUserData();
+                }
+                showMainApp();
+            } else if (users.length > 0) {
+                // 如果没有 currentUser 但有 users，设置第一个为当前用户
+                currentUser = users[0];
+                saveUserData();
                 showMainApp();
             } else {
                 showSetupPage();
@@ -1307,6 +1634,26 @@
         // 加载消息
         function loadMessages(userId) {
             if (!ws || !userId) return;
+            
+            // 检查 WebSocket 连接状态
+            if (ws.readyState !== WebSocket.OPEN) {
+                // 如果还没连接完成，等待连接后再发送
+                const checkConnection = setInterval(() => {
+                    if (ws.readyState === WebSocket.OPEN) {
+                        clearInterval(checkConnection);
+                        ws.send(JSON.stringify({
+                            type: 'load_messages',
+                            data: {
+                                contact_id: userId,
+                                contact_type: 'private'
+                            }
+                        }));
+                    } else if (ws.readyState === WebSocket.CLOSED) {
+                        clearInterval(checkConnection);
+                    }
+                }, 100);
+                return;
+            }
             
             ws.send(JSON.stringify({
                 type: 'load_messages',
@@ -1576,11 +1923,19 @@
             
             ws = new WebSocket(wsUrl);
             
-            ws.onopen = () => {
-                connectionStatus.textContent = '已连接';
-                connectionStatus.classList.add('connected');
-                connectionStatus.classList.remove('disconnected');
-            };
+        ws.onopen = () => {
+            connectionStatus.textContent = '已连接';
+            connectionStatus.classList.add('connected');
+            connectionStatus.classList.remove('disconnected');
+            
+            // 请求命令列表
+            loadCommands();
+            
+            // 如果已经选中了用户，重新加载消息
+            if (currentSelectedUser) {
+                loadMessages(currentSelectedUser.id);
+            }
+        };
             
             ws.onmessage = (event) => {
                 const data = JSON.parse(event.data);
@@ -1625,6 +1980,16 @@
                     if (isUserMessage || isBotMessage) {
                         messages.push(msgData);
                         renderMessages();
+                    }
+                    break;
+                    
+                case 'api_response':
+                    const apiData = data.data;
+                    if (apiData.status === 'ok' && apiData.data && apiData.data.commands) {
+                        // 更新命令列表
+                        commands = apiData.data.commands;
+                        commandPrefix = apiData.data.prefix || '/';
+                        console.log(`加载了 ${apiData.data.total} 个命令`);
                     }
                     break;
             }
@@ -1693,17 +2058,206 @@
         });
 
         btnSend.addEventListener('click', sendMessage);
-        messageInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && e.ctrlKey) {
-                e.preventDefault();
-                sendMessage();
+
+        // 汉堡菜单按钮 - 打开侧边栏
+        btnHamburger.addEventListener('click', openSidebar);
+
+        // 遮罩层 - 关闭侧边栏
+        sidebarOverlay.addEventListener('click', closeSidebar);
+
+        // 选择用户时关闭侧边栏（移动端）
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.sidebar-user-item') && !e.target.closest('.btn-delete-user')) {
+                if (window.innerWidth <= 768) {
+                    closeSidebar();
+                }
             }
         });
 
-        messageInput.addEventListener('input', function() {
+        // 加载命令列表
+        function loadCommands() {
+            if (!ws) return;
+            
+            ws.send(JSON.stringify({
+                type: 'call_api',
+                data: {
+                    endpoint: 'get_commands'
+                }
+            }));
+        }
+
+        // 显示自动补全
+        function showAutocomplete() {
+            autocompleteDropdown.classList.add('show');
+        }
+
+        // 隐藏自动补全
+        function hideAutocomplete() {
+            autocompleteDropdown.classList.remove('show');
+            autocompleteIndex = -1;
+        }
+
+        // 更新自动补全内容
+        function updateAutocomplete(query) {
+            if (!query || !query.startsWith(commandPrefix)) {
+                hideAutocomplete();
+                return;
+            }
+
+            const searchTerm = query.substring(commandPrefix.length).toLowerCase();
+            const matches = commands.filter(cmd => 
+                cmd.name.toLowerCase().startsWith(searchTerm) ||
+                (cmd.aliases && cmd.aliases.some(alias => alias.toLowerCase().startsWith(searchTerm)))
+            );
+
+            if (matches.length === 0) {
+                hideAutocomplete();
+                return;
+            }
+
+            autocompleteItems = matches;
+            autocompleteIndex = -1;
+            
+            autocompleteDropdown.innerHTML = matches.map((cmd, index) => `
+                <div class="autocomplete-item" data-index="${index}">
+                    <div class="autocomplete-item-name">${escapeHtml(commandPrefix + cmd.name)}</div>
+                    ${cmd.help ? `<div class="autocomplete-item-desc">${escapeHtml(cmd.help)}</div>` : ''}
+                    ${cmd.usage ? `<div class="autocomplete-item-usage">${escapeHtml(cmd.usage)}</div>` : ''}
+                </div>
+            `).join('');
+
+            showAutocomplete();
+
+            // 添加点击事件
+            autocompleteDropdown.querySelectorAll('.autocomplete-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const index = parseInt(item.dataset.index);
+                    selectAutocompleteItem(index);
+                });
+            });
+        }
+
+        // 选择自动补全项
+        function selectAutocompleteItem(index) {
+            if (index < 0 || index >= autocompleteItems.length) return;
+            
+            const cmd = autocompleteItems[index];
+            const cursorPos = messageInput.selectionStart;
+            const textBeforeCursor = messageInput.value.substring(0, cursorPos);
+            
+            // 找到命令前缀的位置
+            const prefixPos = textBeforeCursor.lastIndexOf(commandPrefix);
+            if (prefixPos === -1) return;
+            
+            // 替换命令
+            const newText = messageInput.value.substring(0, prefixPos) + commandPrefix + cmd.name + ' ';
+            messageInput.value = newText + messageInput.value.substring(cursorPos);
+            messageInput.focus();
+            
+            hideAutocomplete();
+        }
+
+        // 修改输入框事件监听器，添加自动补全功能
+        messageInput.removeEventListener('input', messageInput.inputHandler);
+        messageInput.removeEventListener('keydown', messageInput.keydownHandler);
+        
+        messageInput.inputHandler = function() {
             this.style.height = '80px';
             this.style.height = Math.min(this.scrollHeight, 200) + 'px';
+            
+            // 命令自动补全（仅在文本模式下）
+            if (currentMessageType === 'text') {
+                const cursorPos = this.selectionStart;
+                const textBeforeCursor = this.value.substring(0, cursorPos);
+                const lastWord = textBeforeCursor.split(/\s/).pop();
+                
+                // 只在输入命令时触发自动补全
+                if (lastWord.startsWith(commandPrefix)) {
+                    updateAutocomplete(lastWord);
+                } else {
+                    hideAutocomplete();
+                }
+            } else {
+                hideAutocomplete();
+            }
+        };
+        
+        messageInput.keydownHandler = function(e) {
+            if (e.key === 'Enter') {
+                if (e.ctrlKey) {
+                    // Ctrl+Enter 换行
+                    e.preventDefault();
+                    const start = this.selectionStart;
+                    const end = this.selectionEnd;
+                    const value = this.value;
+                    this.value = value.substring(0, start) + '\n' + value.substring(end);
+                    this.selectionStart = this.selectionEnd = start + 1;
+                } else {
+                    // Enter 发送
+                    if (autocompleteDropdown.classList.contains('show')) {
+                        e.preventDefault();
+                        // 如果自动补全显示中，选择当前项
+                        if (autocompleteIndex >= 0) {
+                            selectAutocompleteItem(autocompleteIndex);
+                        } else {
+                            hideAutocomplete();
+                        }
+                    } else {
+                        e.preventDefault();
+                        sendMessage();
+                    }
+                }
+            } else if (e.key === 'ArrowDown') {
+                // 下箭头
+                if (autocompleteDropdown.classList.contains('show')) {
+                    e.preventDefault();
+                    autocompleteIndex = Math.min(autocompleteIndex + 1, autocompleteItems.length - 1);
+                    updateAutocompleteSelection();
+                }
+            } else if (e.key === 'ArrowUp') {
+                // 上箭头
+                if (autocompleteDropdown.classList.contains('show')) {
+                    e.preventDefault();
+                    autocompleteIndex = Math.max(autocompleteIndex - 1, -1);
+                    updateAutocompleteSelection();
+                }
+            } else if (e.key === 'Escape') {
+                // ESC 键关闭自动补全
+                hideAutocomplete();
+            } else if (e.key === 'Tab') {
+                // Tab 键选择第一个匹配项
+                if (autocompleteDropdown.classList.contains('show') && autocompleteItems.length > 0) {
+                    e.preventDefault();
+                    selectAutocompleteItem(0);
+                }
+            }
+        };
+
+        messageInput.addEventListener('input', messageInput.inputHandler);
+        messageInput.addEventListener('keydown', messageInput.keydownHandler);
+
+        // 点击页面其他地方关闭自动补全
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.input-wrapper')) {
+                hideAutocomplete();
+            }
         });
+
+        // 更新自动补全选中状态
+        function updateAutocompleteSelection() {
+            const items = autocompleteDropdown.querySelectorAll('.autocomplete-item');
+            items.forEach((item, index) => {
+                item.classList.toggle('active', index === autocompleteIndex);
+            });
+            
+            // 滚动到选中项
+            if (autocompleteIndex >= 0) {
+                const activeItem = items[autocompleteIndex];
+                if (activeItem) {
+                    activeItem.scrollIntoView({ block: 'nearest' });
+                }
+            }
+        }
 
         // 初始化
         initApp();

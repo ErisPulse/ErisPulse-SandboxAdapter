@@ -454,7 +454,11 @@ class SandboxAdapter(sdk.BaseAdapter):
     async def call_api(self, endpoint: str, **params):
         """调用沙箱API"""
         
-        if endpoint == "send_msg":
+        if endpoint == "get_commands":
+            # 获取命令列表
+            return await self._handle_get_commands()
+        
+        elif endpoint == "send_msg":
             # 处理发送消息（Bot发送给用户）
             target_type = params.get("target_type", "user")
             target_id = params.get("target_id", "")
@@ -671,6 +675,10 @@ class SandboxAdapter(sdk.BaseAdapter):
                 # 按需加载消息
                 await self._handle_load_messages(data.get("data", {}))
             
+            elif msg_type == "call_api":
+                # 调用 API
+                await self._handle_call_api(data.get("data", {}))
+            
         except json.JSONDecodeError:
             self.logger.error(f"JSON 解析失败: {raw_msg}")
         except Exception as e:
@@ -726,6 +734,107 @@ class SandboxAdapter(sdk.BaseAdapter):
                 "messages": messages
             }
         })
+    
+    async def _handle_get_commands(self):
+        """获取命令列表"""
+        try:
+            # 导入命令处理器
+            from ErisPulse.Core.Event import command as command_handler
+            
+            # 获取所有可见命令
+            commands_dict = command_handler.get_visible_commands()
+            
+            # 构建命令列表
+            commands_list = []
+            for cmd_name, cmd_info in commands_dict.items():
+                cmd_data = {
+                    "name": cmd_name,
+                    "help": cmd_info.get("help", ""),
+                    "usage": cmd_info.get("usage", ""),
+                    "group": cmd_info.get("group", ""),
+                    "hidden": cmd_info.get("hidden", False)
+                }
+                
+                # 获取别名
+                aliases = [alias for alias, main_name in command_handler.aliases.items() 
+                          if main_name == cmd_name]
+                if aliases:
+                    cmd_data["aliases"] = aliases
+                
+                commands_list.append(cmd_data)
+            
+            # 获取命令前缀
+            prefix = command_handler.prefix
+            
+            return {
+                "status": "ok",
+                "retcode": 0,
+                "data": {
+                    "prefix": prefix,
+                    "commands": commands_list,
+                    "total": len(commands_list)
+                },
+                "message": f"获取了 {len(commands_list)} 个命令"
+            }
+        except ImportError:
+            self.logger.warning("命令处理器模块未找到")
+            return {
+                "status": "ok",
+                "retcode": 0,
+                "data": {
+                    "prefix": "/",
+                    "commands": [],
+                    "total": 0
+                },
+                "message": "命令系统未启用"
+            }
+        except Exception as e:
+            self.logger.error(f"获取命令列表失败: {e}")
+            return {
+                "status": "failed",
+                "retcode": -1,
+                "data": {
+                    "prefix": "/",
+                    "commands": [],
+                    "total": 0
+                },
+                "message": f"获取命令列表失败: {str(e)}"
+            }
+    
+    async def _handle_call_api(self, api_data: Dict):
+        """处理来自网页的 API 调用请求"""
+        endpoint = api_data.get("endpoint", "")
+        
+        if not endpoint:
+            await self._broadcast_to_web({
+                "type": "api_response",
+                "data": {
+                    "status": "failed",
+                    "retcode": -1,
+                    "message": "缺少 endpoint 参数"
+                }
+            })
+            return
+        
+        try:
+            # 调用 API
+            result = await self.call_api(endpoint, **{k: v for k, v in api_data.items() if k != "endpoint"})
+            
+            # 广播 API 响应
+            await self._broadcast_to_web({
+                "type": "api_response",
+                "data": result
+            })
+        except Exception as e:
+            self.logger.error(f"API 调用失败: {e}")
+            await self._broadcast_to_web({
+                "type": "api_response",
+                "data": {
+                    "status": "failed",
+                    "retcode": -1,
+                    "message": f"API 调用失败: {str(e)}"
+                }
+            })
     
     async def register_routes(self):
         """注册路由"""
