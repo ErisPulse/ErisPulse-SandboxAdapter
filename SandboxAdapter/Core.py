@@ -351,6 +351,23 @@ class SandboxAdapter(sdk.BaseAdapter):
             self._reset_modifiers()
             return task
         
+        def File(self, file: str):
+            """发送文件消息"""
+            task = asyncio.create_task(
+                self._adapter.call_api(
+                    endpoint="send_msg",
+                    target_type=self._target_type,
+                    target_id=self._target_id,
+                    message_type="file",
+                    content=file,
+                    at_user_ids=self._at_user_ids,
+                    at_all=self._at_all,
+                    reply_message_id=self._reply_message_id
+                )
+            )
+            self._reset_modifiers()
+            return task
+        
         def _reset_modifiers(self):
             """重置链式修饰器状态"""
             self._at_user_ids = []
@@ -537,6 +554,8 @@ class SandboxAdapter(sdk.BaseAdapter):
             message_segments = [{"type": "record", "data": {"file": content}}]
         elif message_type == "video":
             message_segments = [{"type": "video", "data": {"file": content}}]
+        elif message_type == "file":
+            message_segments = [{"type": "file", "data": {"file": content}}]
         elif message_type == "dice":
             import random
             dice_value = random.randint(1, 6)
