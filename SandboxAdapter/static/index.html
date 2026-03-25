@@ -1104,7 +1104,7 @@
             background: var(--bg-tertiary);
             border-radius: 8px;
             cursor: pointer;
-            display: flex;
+            display: none;
             align-items: center;
             justify-content: center;
             color: var(--text-primary);
@@ -1116,6 +1116,11 @@
         .file-upload-btn:hover {
             border-color: var(--bubble-active);
             background: var(--bg-secondary);
+        }
+
+        /* 媒体类型时显示文件上传按钮 */
+        .file-upload-btn.visible {
+            display: flex;
         }
 
         /* 图片查看模态框 */
@@ -1493,7 +1498,11 @@
                         <div class="autocomplete-dropdown" id="autocompleteDropdown"></div>
                         <textarea class="input-field" id="messageInput" placeholder="输入消息..." disabled></textarea>
                         <button class="btn-send" id="btnSend" disabled>发送</button>
-                        <button class="file-upload-btn" id="btnFileUpload" title="上传文件">📎</button>
+                        <button class="file-upload-btn" id="btnFileUpload" title="上传文件">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M9 16h6v-6h-6v6zm3-4.5V9H9v3h3z"/>
+                            </svg>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -2100,6 +2109,9 @@
             selectUser(newUser);
         });
 
+        // 需要上传文件的媒体类型
+        const mediaTypes = ['image', 'record', 'video', 'file'];
+        
         messageTypeBubbles.querySelectorAll('.type-bubble').forEach(bubble => {
             bubble.addEventListener('click', () => {
                 messageTypeBubbles.querySelectorAll('.type-bubble').forEach(b => b.classList.remove('active'));
@@ -2117,6 +2129,13 @@
                     'markdown': '输入Markdown文本...'
                 };
                 messageInput.placeholder = placeholders[currentMessageType] || '输入消息...';
+                
+                // 根据消息类型显示/隐藏文件上传按钮
+                if (mediaTypes.includes(currentMessageType)) {
+                    btnFileUpload.classList.add('visible');
+                } else {
+                    btnFileUpload.classList.remove('visible');
+                }
             });
         });
 
