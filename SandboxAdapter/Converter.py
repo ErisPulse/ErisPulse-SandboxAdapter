@@ -31,7 +31,8 @@ class SandboxConverter:
                 "platform": "sandbox",
                 "user_id": self.self_id
             },
-            "sandbox_raw": raw_event
+            "sandbox_raw": raw_event,
+            "sandbox_raw_type": raw_event.get("type", "")
         }
         
         # 根据事件类型分发处理

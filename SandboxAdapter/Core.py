@@ -527,16 +527,17 @@ class SandboxAdapter(sdk.BaseAdapter):
                 "retcode": 0,
                 "data": {"message_id": str(len(self.user_messages.get(target_id, [])))},
                 "message_id": str(len(self.user_messages.get(target_id, []))),
-                "message": "消息发送成功",
-                "self": {"user_id": self.self_id}
+                "message": "",
+                "sandbox_raw": None
             }
         
         return {
             "status": "failed",
-            "retcode": -1,
+            "retcode": 10002,
             "data": None,
+            "message_id": "",
             "message": "未知的API端点",
-            "self": {"user_id": self.self_id}
+            "sandbox_raw": None
         }
     
     def _build_message_segments(self, message_type, content, at_user_ids, at_all, reply_message_id):
@@ -658,7 +659,18 @@ class SandboxAdapter(sdk.BaseAdapter):
         self._web_connections.append(websocket)
         self.logger.info("网页客户端已连接")
         
-        # 发送初始数据
+        await self.adapter.emit({
+            "type": "meta",
+            "detail_type": "connect",
+            "platform": "sandbox",
+            "self": {
+                "platform": "sandbox",
+                "user_id": self.self_id,
+                "user_name": "SandboxBot",
+                "nickname": "沙箱机器人",
+            }
+        })
+        
         initial_data = {
             "type": "init",
             "data": {
@@ -668,47 +680,89 @@ class SandboxAdapter(sdk.BaseAdapter):
         cleaned_data = self._clean_for_serialization(initial_data)
         await websocket.send_text(json.dumps(cleaned_data, ensure_ascii=False))
         
+        heartbeat_task = asyncio.create_task(self._heartbeat_loop())
+        
         try:
             while True:
                 data = await websocket.receive_text()
-                await self._handle_web_message(data)
+                self.logger.debug(f"[Sandbox] 收到WebSocket消息: {data[:200]}")
+                asyncio.create_task(self._handle_web_message_safe(data))
+                self.logger.debug("[Sandbox] 已创建消息处理任务")
         except WebSocketDisconnect:
             self.logger.info("网页客户端断开连接")
         except Exception as e:
             self.logger.error(f"WebSocket 处理异常: {e}")
+            import traceback
+            self.logger.error(f"详细错误: {traceback.format_exc()}")
         finally:
+            heartbeat_task.cancel()
             if websocket in self._web_connections:
                 self._web_connections.remove(websocket)
+            await self.adapter.emit({
+                "type": "meta",
+                "detail_type": "disconnect",
+                "platform": "sandbox",
+                "self": {
+                    "platform": "sandbox",
+                    "user_id": self.self_id,
+                }
+            })
+    
+    async def _heartbeat_loop(self):
+        """定期发送 meta heartbeat 事件，更新 Bot 活跃时间"""
+        try:
+            while True:
+                await asyncio.sleep(30)
+                await self.adapter.emit({
+                    "type": "meta",
+                    "detail_type": "heartbeat",
+                    "platform": "sandbox",
+                    "self": {
+                        "platform": "sandbox",
+                        "user_id": self.self_id,
+                    }
+                })
+        except asyncio.CancelledError:
+            pass
+    
+    async def _handle_web_message_safe(self, raw_msg: str):
+        """安全地处理网页消息（捕获所有异常，避免后台任务静默失败）"""
+        try:
+            await self._handle_web_message(raw_msg)
+        except Exception as e:
+            self.logger.error(f"[Sandbox] 后台消息处理任务异常: {e}")
+            import traceback
+            self.logger.error(f"详细错误: {traceback.format_exc()}")
     
     async def _handle_web_message(self, raw_msg: str):
         """处理来自网页的消息"""
         try:
             data = json.loads(raw_msg)
             msg_type = data.get("type")
+            self.logger.info(f"[Sandbox] 处理消息类型: {msg_type}")
             
             if msg_type == "send_message":
-                # 网页发送消息（用户发送给Bot）
                 await self._handle_send_message(data.get("data", {}))
-            
             elif msg_type == "load_messages":
-                # 按需加载消息
                 await self._handle_load_messages(data.get("data", {}))
-            
             elif msg_type == "call_api":
-                # 调用 API
                 await self._handle_call_api(data.get("data", {}))
             
+            self.logger.info(f"[Sandbox] 消息类型 {msg_type} 处理完成")
         except json.JSONDecodeError:
             self.logger.error(f"JSON 解析失败: {raw_msg}")
         except Exception as e:
             self.logger.error(f"处理网页消息异常: {e}")
+            import traceback
+            self.logger.error(f"详细错误: {traceback.format_exc()}")
     
     async def _handle_send_message(self, message_data: Dict):
         """处理网页发送的消息"""
         user_id = message_data.get("user_id", "")
         user_name = message_data.get("user_name", "")
         
-        # 构建原始事件
+        self.logger.info(f"[Sandbox] _handle_send_message 开始, user={user_name}({user_id})")
+        
         raw_event = {
             "type": "message",
             "message_type": "private",
@@ -717,24 +771,30 @@ class SandboxAdapter(sdk.BaseAdapter):
             "message": message_data.get("message", ""),
             "message_type_detail": message_data.get("message_type_detail", "text"),
             "message_segments": message_data.get("message_segments", []),
-            "target_id": self.self_id,  # 发送给Bot
+            "target_id": self.self_id,
             "timestamp": int(time.time())
         }
         
-        # 保存到用户的消息列表
         if user_id not in self.user_messages:
             self.user_messages[user_id] = []
         self.user_messages[user_id].append(raw_event)
         
-        # 持久化数据
         self._save_persisted_data()
         
-        # 转换为 OneBot12 事件并发送给模块
         onebot_event = self.convert(raw_event)
         
         if onebot_event:
-            self.logger.info(f"收到网页消息: {message_data.get('message', '')} (用户: {user_name})")
-            await self.adapter.emit(onebot_event)
+            self.logger.info(f"[Sandbox] 开始 emit 事件到模块系统: {message_data.get('message', '')[:50]}")
+            try:
+                await asyncio.wait_for(self.adapter.emit(onebot_event), timeout=30.0)
+                self.logger.info(f"[Sandbox] emit 完成")
+            except asyncio.TimeoutError:
+                pass
+                # self.logger.error(f"[Sandbox] emit 超时(30s)！某个模块的事件处理器可能阻塞了")
+            except Exception as e:
+                self.logger.error(f"[Sandbox] emit 异常: {e}")
+        else:
+            self.logger.warning(f"[Sandbox] convert 返回 None, 跳过 emit")
     
     async def _handle_load_messages(self, load_data: Dict):
         """处理加载消息请求"""
