@@ -141,19 +141,50 @@ class SandboxConverter:
         
         if notice_type == "group_member_increase":
             base_event.update({
-                "group_id": raw_event.get("group_id", ""),
-                "user_id": raw_event.get("user_id", ""),
-                "operator_id": raw_event.get("operator_id", ""),
+                "group_id": str(raw_event.get("group_id", "")),
+                "user_id": str(raw_event.get("user_id", "")),
+                "operator_id": str(raw_event.get("operator_id", "")),
             })
+            if "user_name" in raw_event:
+                base_event["user_nickname"] = str(raw_event["user_name"])
+            if "group_name" in raw_event:
+                base_event["group_name"] = str(raw_event["group_name"])
         elif notice_type == "group_member_decrease":
             base_event.update({
-                "group_id": raw_event.get("group_id", ""),
-                "user_id": raw_event.get("user_id", ""),
-                "operator_id": raw_event.get("operator_id", ""),
+                "group_id": str(raw_event.get("group_id", "")),
+                "user_id": str(raw_event.get("user_id", "")),
+                "operator_id": str(raw_event.get("operator_id", "")),
             })
+            if "user_name" in raw_event:
+                base_event["user_nickname"] = str(raw_event["user_name"])
+            if "group_name" in raw_event:
+                base_event["group_name"] = str(raw_event["group_name"])
         elif notice_type == "friend_increase":
             base_event.update({
-                "user_id": raw_event.get("user_id", ""),
+                "user_id": str(raw_event.get("user_id", "")),
             })
+            if "user_name" in raw_event:
+                base_event["user_nickname"] = str(raw_event["user_name"])
+        
+        return base_event
+    
+    def _handle_request(self, raw_event: Dict, base_event: Dict) -> Dict:
+        """处理请求事件"""
+        request_type = raw_event.get("request_type", "friend")
+        
+        base_event.update({
+            "type": "request",
+            "detail_type": request_type,
+            "user_id": str(raw_event.get("user_id", "")),
+            "comment": str(raw_event.get("comment", "")),
+        })
+        
+        if "user_name" in raw_event:
+            base_event["user_nickname"] = str(raw_event["user_name"])
+        
+        if request_type == "group":
+            base_event["group_id"] = str(raw_event.get("group_id", ""))
+            if "group_name" in raw_event:
+                base_event["group_name"] = str(raw_event["group_name"])
         
         return base_event

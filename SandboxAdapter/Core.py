@@ -2,6 +2,7 @@ import asyncio
 import json
 import os
 import time
+import uuid
 from typing import Dict, List
 from fastapi import WebSocket, WebSocketDisconnect
 from ErisPulse import sdk
@@ -391,6 +392,14 @@ class SandboxAdapter(sdk.BaseAdapter):
         # 结构: {user_id: [message1, message2, ...]}
         self.user_messages: Dict[str, List[Dict]] = {}
         
+        # 群组存储
+        # 结构: {group_id: {"group_id": str, "group_name": str, "members": [user_id, ...], "created_at": int}}
+        self.groups: Dict[str, Dict] = {}
+        
+        # 群组消息存储（按群组ID分组）
+        # 结构: {group_id: [message1, message2, ...]}
+        self.group_messages: Dict[str, List[Dict]] = {}
+        
         # WebSocket 连接
         self._web_connections: List[WebSocket] = []
         
@@ -428,7 +437,24 @@ class SandboxAdapter(sdk.BaseAdapter):
                 total_messages = sum(len(msgs) for msgs in self.user_messages.values())
                 self.logger.info(f"从存储加载了 {total_messages} 条消息，共 {len(self.user_messages)} 个用户")
         except Exception as e:
-            self.logger.warning(f"加载数据失败: {e}")
+            self.logger.warning(f"加载用户消息数据失败: {e}")
+        
+        try:
+            persisted_groups = self.storage.get("sandbox:groups", {})
+            if persisted_groups:
+                self.groups = self._clean_for_serialization(persisted_groups)
+                self.logger.info(f"从存储加载了 {len(self.groups)} 个群组")
+        except Exception as e:
+            self.logger.warning(f"加载群组数据失败: {e}")
+        
+        try:
+            persisted_group_messages = self.storage.get("sandbox:group_messages", {})
+            if persisted_group_messages:
+                self.group_messages = self._clean_for_serialization(persisted_group_messages)
+                total_group_msgs = sum(len(msgs) for msgs in self.group_messages.values())
+                self.logger.info(f"从存储加载了 {total_group_msgs} 条群组消息，共 {len(self.group_messages)} 个群组")
+        except Exception as e:
+            self.logger.warning(f"加载群组消息数据失败: {e}")
     
     def _clean_for_serialization(self, data):
         """清理数据，确保所有字段都是JSON可序列化的"""
@@ -463,6 +489,17 @@ class SandboxAdapter(sdk.BaseAdapter):
             
             total_messages = sum(len(msgs) for msgs in messages_to_save.values())
             self.logger.debug(f"保存了 {total_messages} 条消息")
+            
+            # 保存群组数据
+            groups_to_save = self._clean_for_serialization(self.groups)
+            self.storage.set("sandbox:groups", groups_to_save)
+            
+            # 保存群组消息
+            group_messages_to_save = {}
+            for group_id, msgs in self.group_messages.items():
+                group_messages_to_save[group_id] = msgs[-1000:] if len(msgs) > 1000 else msgs
+            group_messages_to_save = self._clean_for_serialization(group_messages_to_save)
+            self.storage.set("sandbox:group_messages", group_messages_to_save)
         except Exception as e:
             self.logger.error(f"保存数据失败: {e}")
             import traceback
@@ -476,7 +513,7 @@ class SandboxAdapter(sdk.BaseAdapter):
             return await self._handle_get_commands()
         
         elif endpoint == "send_msg":
-            # 处理发送消息（Bot发送给用户）
+            # 处理发送消息（Bot发送给用户/群组）
             target_type = params.get("target_type", "user")
             target_id = params.get("target_id", "")
             message_type = params.get("message_type", "text")
@@ -492,26 +529,39 @@ class SandboxAdapter(sdk.BaseAdapter):
                 message_type, content, at_user_ids, at_all, reply_message_id
             )
             
+            # 确定消息类型
+            chat_type = "group" if target_type == "group" else "private"
+            
             # 构建消息
             message = {
                 "type": "message",
-                "message_type": "private",
+                "message_type": chat_type,
                 "user_id": self.self_id,  # Bot的ID
                 "user_name": "机器人",
-                "target_id": target_id,  # 目标用户ID
+                "target_id": target_id,  # 目标用户ID或群组ID
                 "message": content,
                 "message_type_detail": message_type,
                 "message_segments": message_segments,
                 "timestamp": int(time.time())
             }
             
+            if chat_type == "group":
+                message["group_id"] = target_id
+                group_info = self.groups.get(target_id, {})
+                message["group_name"] = group_info.get("group_name", "")
+            
             # 清理并保存消息
             message = self._clean_for_serialization(message)
             
-            # 保存到目标用户的消息列表
-            if target_id not in self.user_messages:
-                self.user_messages[target_id] = []
-            self.user_messages[target_id].append(message)
+            # 根据消息类型保存到不同存储
+            if chat_type == "group":
+                if target_id not in self.group_messages:
+                    self.group_messages[target_id] = []
+                self.group_messages[target_id].append(message)
+            else:
+                if target_id not in self.user_messages:
+                    self.user_messages[target_id] = []
+                self.user_messages[target_id].append(message)
             
             # 持久化数据
             self._save_persisted_data()
@@ -522,11 +572,17 @@ class SandboxAdapter(sdk.BaseAdapter):
                 "data": message
             })
             
+            # 构建 message_id
+            if chat_type == "group":
+                msg_index = len(self.group_messages.get(target_id, []))
+            else:
+                msg_index = len(self.user_messages.get(target_id, []))
+            
             return {
                 "status": "ok",
                 "retcode": 0,
-                "data": {"message_id": str(len(self.user_messages.get(target_id, [])))},
-                "message_id": str(len(self.user_messages.get(target_id, []))),
+                "data": {"message_id": str(msg_index)},
+                "message_id": str(msg_index),
                 "message": "",
                 "sandbox_raw": None
             }
@@ -747,6 +803,10 @@ class SandboxAdapter(sdk.BaseAdapter):
                 await self._handle_load_messages(data.get("data", {}))
             elif msg_type == "call_api":
                 await self._handle_call_api(data.get("data", {}))
+            elif msg_type == "create_group":
+                await self._handle_create_group(data.get("data", {}))
+            elif msg_type == "manage_group":
+                await self._handle_manage_group(data.get("data", {}))
             
             self.logger.info(f"[Sandbox] 消息类型 {msg_type} 处理完成")
         except json.JSONDecodeError:
@@ -757,15 +817,16 @@ class SandboxAdapter(sdk.BaseAdapter):
             self.logger.error(f"详细错误: {traceback.format_exc()}")
     
     async def _handle_send_message(self, message_data: Dict):
-        """处理网页发送的消息"""
+        """处理网页发送的消息（私聊或群聊）"""
         user_id = message_data.get("user_id", "")
         user_name = message_data.get("user_name", "")
+        message_type = message_data.get("message_type", "private")
         
-        self.logger.info(f"[Sandbox] _handle_send_message 开始, user={user_name}({user_id})")
+        self.logger.info(f"[Sandbox] _handle_send_message 开始, user={user_name}({user_id}), type={message_type}")
         
         raw_event = {
             "type": "message",
-            "message_type": "private",
+            "message_type": message_type,
             "user_id": user_id,
             "user_name": user_name,
             "message": message_data.get("message", ""),
@@ -775,9 +836,20 @@ class SandboxAdapter(sdk.BaseAdapter):
             "timestamp": int(time.time())
         }
         
-        if user_id not in self.user_messages:
-            self.user_messages[user_id] = []
-        self.user_messages[user_id].append(raw_event)
+        if message_type == "group":
+            group_id = message_data.get("group_id", "")
+            group_name = message_data.get("group_name", "")
+            raw_event["group_id"] = group_id
+            raw_event["group_name"] = group_name
+            raw_event["target_id"] = group_id
+            
+            if group_id not in self.group_messages:
+                self.group_messages[group_id] = []
+            self.group_messages[group_id].append(raw_event)
+        else:
+            if user_id not in self.user_messages:
+                self.user_messages[user_id] = []
+            self.user_messages[user_id].append(raw_event)
         
         self._save_persisted_data()
         
@@ -790,7 +862,6 @@ class SandboxAdapter(sdk.BaseAdapter):
                 self.logger.info(f"[Sandbox] emit 完成")
             except asyncio.TimeoutError:
                 pass
-                # self.logger.error(f"[Sandbox] emit 超时(30s)！某个模块的事件处理器可能阻塞了")
             except Exception as e:
                 self.logger.error(f"[Sandbox] emit 异常: {e}")
         else:
@@ -801,10 +872,11 @@ class SandboxAdapter(sdk.BaseAdapter):
         contact_id = load_data.get("contact_id", "")
         contact_type = load_data.get("contact_type", "private")
         
-        # 获取该用户的消息
-        messages = self.user_messages.get(contact_id, [])
+        if contact_type == "group":
+            messages = self.group_messages.get(contact_id, [])
+        else:
+            messages = self.user_messages.get(contact_id, [])
         
-        # 发送过滤后的消息
         await self._broadcast_to_web({
             "type": "messages_loaded",
             "data": {
@@ -914,6 +986,91 @@ class SandboxAdapter(sdk.BaseAdapter):
                     "message": f"API 调用失败: {str(e)}"
                 }
             })
+    
+    async def _handle_create_group(self, group_data: Dict):
+        """处理创建群组请求"""
+        group_name = group_data.get("group_name", "未命名群组")
+        members = group_data.get("members", [])
+        
+        group_id = f"g_{int(time.time())}_{uuid.uuid4().hex[:6]}"
+        
+        group_info = {
+            "group_id": group_id,
+            "group_name": group_name,
+            "members": members,
+            "created_at": int(time.time())
+        }
+        
+        self.groups[group_id] = group_info
+        self._save_persisted_data()
+        
+        self.logger.info(f"[Sandbox] 创建群组: {group_name} ({group_id}), 成员: {members}")
+        
+        await self._broadcast_to_web({
+            "type": "group_created",
+            "data": group_info
+        })
+    
+    async def _handle_manage_group(self, manage_data: Dict):
+        """处理群组管理请求（添加/移除成员）"""
+        action = manage_data.get("action", "")
+        group_id = manage_data.get("group_id", "")
+        user_id = manage_data.get("user_id", "")
+        user_name = manage_data.get("user_name", "")
+        
+        if group_id not in self.groups:
+            await self._broadcast_to_web({
+                "type": "error",
+                "data": {"message": f"群组不存在: {group_id}"}
+            })
+            return
+        
+        group_info = self.groups[group_id]
+        
+        if action == "add_member":
+            if user_id not in group_info["members"]:
+                group_info["members"].append(user_id)
+                self._save_persisted_data()
+                
+                notice_event = {
+                    "type": "notice",
+                    "notice_type": "group_member_increase",
+                    "group_id": group_id,
+                    "group_name": group_info["group_name"],
+                    "user_id": user_id,
+                    "user_name": user_name,
+                    "operator_id": self.self_id
+                }
+                onebot_event = self.convert(notice_event)
+                if onebot_event:
+                    await self.adapter.emit(onebot_event)
+                
+                self.logger.info(f"[Sandbox] 用户 {user_name}({user_id}) 加入群组 {group_info['group_name']}({group_id})")
+        
+        elif action == "remove_member":
+            if user_id in group_info["members"]:
+                group_info["members"].remove(user_id)
+                self._save_persisted_data()
+                
+                notice_event = {
+                    "type": "notice",
+                    "notice_type": "group_member_decrease",
+                    "group_id": group_id,
+                    "group_name": group_info["group_name"],
+                    "user_id": user_id,
+                    "user_name": user_name,
+                    "operator_id": self.self_id
+                }
+                onebot_event = self.convert(notice_event)
+                if onebot_event:
+                    await self.adapter.emit(onebot_event)
+                
+                self.logger.info(f"[Sandbox] 用户 {user_name}({user_id}) 离开群组 {group_info['group_name']}({group_id})")
+        
+        await self._broadcast_to_web({
+            "type": "group_updated",
+            "data": self.groups[group_id]
+        })
     
     async def register_routes(self):
         """注册路由"""

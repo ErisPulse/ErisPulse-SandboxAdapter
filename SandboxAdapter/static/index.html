@@ -25,6 +25,7 @@
             --border-color: #E0E0E0;
             --border-hover: #CCCCCC;
             --bubble-active: #D4D4AA;
+            --bubble-active-hover: #C4C49A;
             --message-sent: #E8E8D0;
             --message-received: #FFFFFF;
             --shadow-color: rgba(0, 0, 0, 0.08);
@@ -45,7 +46,6 @@
             max-height: calc(100% - var(--keyboard-height) - 200px);
         }
 
-        /* 深色模式 */
         [data-theme="dark"] {
             --bg-primary: #1a1a1a;
             --bg-secondary: #252525;
@@ -56,6 +56,7 @@
             --border-color: #404040;
             --border-hover: #505050;
             --bubble-active: #5a5a3a;
+            --bubble-active-hover: #4a4a2a;
             --message-sent: #3d3d2d;
             --message-received: #363636;
             --shadow-color: rgba(0, 0, 0, 0.3);
@@ -68,6 +69,61 @@
             --error-color: #FFCDD2;
             --error-border: #C62828;
             --link-color: #64B5F6;
+        }
+
+        /* ========== ErisPulse Theme ========== */
+        [data-ui-style="eris"] {
+            --bg-primary: #F4F7FB;
+            --bg-secondary: #EBF0F7;
+            --bg-tertiary: #FFFFFF;
+            --text-primary: #2C3E50;
+            --text-secondary: #5A6C7D;
+            --text-tertiary: #A0B0C0;
+            --border-color: #DDE3EC;
+            --border-hover: #CDD5E0;
+            --bubble-active: #7EB8D8;
+            --bubble-active-hover: #6AA8CA;
+            --message-sent: rgba(126, 184, 216, .15);
+            --message-received: #FFFFFF;
+            --shadow-color: rgba(100, 130, 160, .06);
+            --modal-bg: rgba(100, 130, 160, .45);
+            --image-modal-bg: rgba(14, 21, 32, .92);
+            --success-bg: #E8F5E9;
+            --success-color: #2E7D32;
+            --success-border: #C8E6C9;
+            --error-bg: #FFEBEE;
+            --error-color: #C62828;
+            --error-border: #FFCDD2;
+            --link-color: #7EB8D8;
+            --accent-glow: rgba(126, 184, 216, .12);
+            --accent-glow-strong: rgba(126, 184, 216, .22);
+        }
+
+        [data-theme="dark"][data-ui-style="eris"] {
+            --bg-primary: #0E1520;
+            --bg-secondary: #151C28;
+            --bg-tertiary: #1A2230;
+            --text-primary: #E2E8F0;
+            --text-secondary: #A0B0C0;
+            --text-tertiary: #5A6C7D;
+            --border-color: #283545;
+            --border-hover: #384D62;
+            --bubble-active: #7DBFE0;
+            --bubble-active-hover: #6AB0D4;
+            --message-sent: rgba(125, 191, 224, .12);
+            --message-received: #1A2230;
+            --shadow-color: rgba(0, 0, 0, .25);
+            --modal-bg: rgba(0, 0, 0, .6);
+            --image-modal-bg: rgba(0, 0, 0, .95);
+            --success-bg: #1B5E20;
+            --success-color: #A5D6A7;
+            --success-border: #2E7D32;
+            --error-bg: #B71C1C;
+            --error-color: #FFCDD2;
+            --error-border: #C62828;
+            --link-color: #7DBFE0;
+            --accent-glow: rgba(125, 191, 224, .08);
+            --accent-glow-strong: rgba(125, 191, 224, .18);
         }
 
         html {
@@ -120,6 +176,123 @@
             line-height: 1.5;
         }
 
+        /* ========== ErisPulse Setup Page ========== */
+        [data-ui-style="eris"] .setup-page {
+            background: linear-gradient(135deg, #F4F7FB 0%, #EBF0F7 50%, #F4F7FB 100%);
+        }
+
+        [data-ui-style="eris"] .setup-card {
+            background: rgba(255, 255, 255, .82);
+            backdrop-filter: blur(24px) saturate(160%);
+            -webkit-backdrop-filter: blur(24px) saturate(160%);
+            border: 1px solid rgba(221, 227, 236, .6);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(100, 130, 160, .08), 0 1px 4px rgba(100, 130, 160, .04);
+            animation: erisCardIn .5s cubic-bezier(.23, 1, .32, 1);
+        }
+
+        @keyframes erisCardIn {
+            from { opacity: 0; transform: translateY(16px) scale(.97) }
+            to { opacity: 1; transform: translateY(0) scale(1) }
+        }
+
+        [data-ui-style="eris"] .setup-card h1 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #2C3E50;
+            text-align: center;
+        }
+
+        [data-ui-style="eris"] .setup-card p {
+            color: #5A6C7D;
+            text-align: center;
+        }
+
+        [data-ui-style="eris"] .setup-card .form-group input {
+            border-color: rgba(126, 184, 216, .25);
+            background: rgba(244, 247, 251, .6);
+            border-radius: 12px;
+            padding: 14px 18px;
+            font-size: 14px;
+            transition: all .25s cubic-bezier(.4, 0, .2, 1);
+        }
+
+        [data-ui-style="eris"] .setup-card .form-group input:focus {
+            border-color: #7EB8D8;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(126, 184, 216, .1);
+        }
+
+        [data-ui-style="eris"] .setup-card .form-group input::placeholder {
+            color: #A0B0C0;
+        }
+
+        [data-ui-style="eris"] .setup-card .btn-primary {
+            background: #7EB8D8;
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            padding: 14px 28px;
+            font-weight: 600;
+            font-size: 15px;
+            box-shadow: 0 2px 8px rgba(126, 184, 216, .22);
+            transition: all .25s cubic-bezier(.4, 0, .2, 1);
+        }
+
+        [data-ui-style="eris"] .setup-card .btn-primary:hover {
+            background: #6AA8CA;
+            box-shadow: 0 4px 16px rgba(126, 184, 216, .32);
+            transform: translateY(-1px);
+        }
+
+        [data-ui-style="eris"] .setup-card .btn-primary:active {
+            transform: scale(.98);
+            box-shadow: 0 1px 4px rgba(126, 184, 216, .2);
+        }
+
+        [data-theme="dark"][data-ui-style="eris"] .setup-page {
+            background: linear-gradient(135deg, #0E1520 0%, #151C28 50%, #0E1520 100%);
+        }
+
+        [data-theme="dark"][data-ui-style="eris"] .setup-card {
+            background: rgba(21, 28, 40, .88);
+            border-color: rgba(40, 53, 69, .6);
+        }
+
+        [data-theme="dark"][data-ui-style="eris"] .setup-card h1 {
+            color: #E2E8F0;
+        }
+
+        [data-theme="dark"][data-ui-style="eris"] .setup-card p {
+            color: #A0B0C0;
+        }
+
+        [data-theme="dark"][data-ui-style="eris"] .setup-card .form-group input {
+            background: rgba(14, 21, 32, .5);
+            border-color: rgba(125, 191, 224, .15);
+            color: #E2E8F0;
+        }
+
+        [data-theme="dark"][data-ui-style="eris"] .setup-card .form-group input:focus {
+            background: rgba(14, 21, 32, .7);
+            border-color: rgba(125, 191, 224, .4);
+            box-shadow: 0 0 0 3px rgba(125, 191, 224, .08);
+        }
+
+        [data-theme="dark"][data-ui-style="eris"] .setup-card .form-group input::placeholder {
+            color: #5A6C7D;
+        }
+
+        [data-theme="dark"][data-ui-style="eris"] .setup-card .btn-primary {
+            background: #7DBFE0;
+            box-shadow: 0 2px 8px rgba(125, 191, 224, .22);
+        }
+
+        [data-theme="dark"][data-ui-style="eris"] .setup-card .btn-primary:hover {
+            background: #6AB0D4;
+            box-shadow: 0 4px 16px rgba(125, 191, 224, .32);
+        }
+
         .form-group {
             margin-bottom: 20px;
         }
@@ -168,7 +341,7 @@
         }
 
         .btn-primary:hover {
-            background-color: #C4C49A;
+            background-color: var(--bubble-active-hover);
             transform: translateY(-1px);
         }
 
@@ -257,43 +430,6 @@
         .btn-icon svg {
             width: 18px;
             height: 18px;
-        }
-
-        /* 主题切换按钮 */
-        .btn-theme {
-            width: 36px;
-            height: 36px;
-            border: 1px solid var(--border-color);
-            background: var(--bg-tertiary);
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-primary);
-            transition: all 0.2s;
-        }
-
-        .btn-theme:hover {
-            border-color: var(--bubble-active);
-            background: var(--bg-secondary);
-        }
-
-        .btn-theme svg {
-            width: 18px;
-            height: 18px;
-        }
-
-        .btn-theme .icon-sun {
-            display: none;
-        }
-
-        [data-theme="dark"] .btn-theme .icon-sun {
-            display: block;
-        }
-
-        [data-theme="dark"] .btn-theme .icon-moon {
-            display: none;
         }
 
         .main {
@@ -452,8 +588,8 @@
         }
 
         .btn-delete-user:hover {
-            background: #FFEBEE;
-            color: #C62828;
+            background: var(--error-bg);
+            color: var(--error-color);
         }
 
         .btn-delete-user svg {
@@ -968,7 +1104,7 @@
         }
 
         .btn-send:hover:not(:disabled) {
-            background-color: #C4C49A;
+            background-color: var(--bubble-active-hover);
             transform: translateY(-1px);
         }
 
@@ -1293,6 +1429,721 @@
             margin-top: 2px;
         }
 
+        /* ========== ErisPulse Main Chat UI ========== */
+
+        /* Header */
+        [data-ui-style="eris"] .header {
+            background: var(--bg-secondary);
+            border-bottom-color: var(--border-color);
+        }
+
+        [data-ui-style="eris"] .header h1 {
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        /* Status badge */
+        [data-ui-style="eris"] .status {
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        [data-ui-style="eris"] .status.connected {
+            background: rgba(126, 184, 216, .1);
+            color: #7EB8D8;
+            border-color: rgba(126, 184, 216, .25);
+        }
+
+        [data-theme="dark"][data-ui-style="eris"] .status.connected {
+            background: rgba(125, 191, 224, .08);
+            color: #7DBFE0;
+            border-color: rgba(125, 191, 224, .2);
+        }
+
+        /* Icon buttons */
+        [data-ui-style="eris"] .btn-icon {
+            border-radius: 10px;
+            border-color: var(--border-color);
+            transition: all .25s cubic-bezier(.4, 0, .2, 1);
+        }
+
+        [data-ui-style="eris"] .btn-icon:hover {
+            border-color: #7EB8D8;
+            box-shadow: 0 0 0 2px rgba(126, 184, 216, .08);
+        }
+
+        [data-theme="dark"][data-ui-style="eris"] .btn-icon:hover {
+            border-color: #7DBFE0;
+            box-shadow: 0 0 0 2px rgba(125, 191, 224, .08);
+        }
+
+        /* Sidebar */
+        [data-ui-style="eris"] .sidebar {
+            background: var(--bg-secondary);
+            border-right-color: var(--border-color);
+        }
+
+        [data-ui-style="eris"] .sidebar-header {
+            border-bottom-color: var(--border-color);
+        }
+
+        [data-ui-style="eris"] .sidebar-header h3 {
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        [data-ui-style="eris"] .sidebar-user-item {
+            border-radius: 10px;
+            position: relative;
+            transition: all .2s ease;
+        }
+
+        [data-ui-style="eris"] .sidebar-user-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 8px;
+            bottom: 8px;
+            width: 3px;
+            border-radius: 0 3px 3px 0;
+            background: transparent;
+            transition: background .25s ease;
+        }
+
+        [data-ui-style="eris"] .sidebar-user-item:hover {
+            background: var(--bg-tertiary);
+            transform: translateX(2px);
+        }
+
+        [data-ui-style="eris"] .sidebar-user-item:hover::before {
+            background: var(--border-hover);
+        }
+
+        [data-ui-style="eris"] .sidebar-user-item.active {
+            background: var(--accent-glow);
+            border-color: transparent;
+        }
+
+        [data-ui-style="eris"] .sidebar-user-item.active::before {
+            background: #7EB8D8;
+        }
+
+        [data-theme="dark"][data-ui-style="eris"] .sidebar-user-item.active {
+            background: var(--accent-glow);
+        }
+
+        [data-theme="dark"][data-ui-style="eris"] .sidebar-user-item.active::before {
+            background: #7DBFE0;
+        }
+
+        [data-ui-style="eris"] .sidebar-user-item.active .sidebar-user-avatar {
+            background-color: rgba(126, 184, 216, .15);
+            color: #7EB8D8;
+        }
+
+        [data-theme="dark"][data-ui-style="eris"] .sidebar-user-item.active .sidebar-user-avatar {
+            background-color: rgba(125, 191, 224, .12);
+            color: #7DBFE0;
+        }
+
+        [data-ui-style="eris"] .sidebar-user-avatar {
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+        }
+
+        [data-ui-style="eris"] .btn-add-account {
+            border-radius: 8px;
+            transition: all .25s cubic-bezier(.4, 0, .2, 1);
+        }
+
+        [data-ui-style="eris"] .btn-add-account:hover {
+            border-color: #7EB8D8;
+            background: rgba(126, 184, 216, .1);
+            color: #7EB8D8;
+        }
+
+        [data-theme="dark"][data-ui-style="eris"] .btn-add-account:hover {
+            border-color: #7DBFE0;
+            background: rgba(125, 191, 224, .08);
+            color: #7DBFE0;
+        }
+
+        /* Chat area */
+        [data-ui-style="eris"] .chat-header {
+            background: var(--bg-secondary);
+            border-bottom-color: var(--border-color);
+        }
+
+        [data-ui-style="eris"] .chat-header h2 {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Messages */
+        [data-ui-style="eris"] .message.sent {
+            background-color: var(--message-sent);
+            border-radius: 16px 16px 4px 16px;
+            border: 1px solid rgba(126, 184, 216, .12);
+        }
+
+        [data-theme="dark"][data-ui-style="eris"] .message.sent {
+            border-color: rgba(125, 191, 224, .08);
+        }
+
+        [data-ui-style="eris"] .message.received {
+            background-color: var(--message-received);
+            border-radius: 16px 16px 16px 4px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 8px var(--shadow-color);
+        }
+
+        [data-ui-style="eris"] .message-sender {
+            color: #7EB8D8;
+            font-weight: 600;
+        }
+
+        [data-theme="dark"][data-ui-style="eris"] .message-sender {
+            color: #7DBFE0;
+        }
+
+        /* Message segments - mention */
+        [data-ui-style="eris"] .message-segment-mention,
+        [data-ui-style="eris"] .message-segment-mention-all {
+            background: var(--accent-glow);
+            color: #7EB8D8;
+            border-radius: 8px;
+        }
+
+        [data-theme="dark"][data-ui-style="eris"] .message-segment-mention,
+        [data-theme="dark"][data-ui-style="eris"] .message-segment-mention-all {
+            background: var(--accent-glow);
+            color: #7DBFE0;
+        }
+
+        /* Message segment - reply */
+        [data-ui-style="eris"] .message-segment-reply {
+            border-left-color: #7EB8D8;
+            background: var(--accent-glow);
+        }
+
+        [data-theme="dark"][data-ui-style="eris"] .message-segment-reply {
+            border-left-color: #7DBFE0;
+        }
+
+        /* Media cards */
+        [data-ui-style="eris"] .media-card:hover {
+            background: var(--accent-glow);
+        }
+
+        /* Audio player */
+        [data-ui-style="eris"] .audio-player-container:hover {
+            background: var(--accent-glow);
+        }
+
+        [data-ui-style="eris"] .audio-play-btn {
+            background: rgba(126, 184, 216, .15);
+            color: #7EB8D8;
+        }
+
+        [data-theme="dark"][data-ui-style="eris"] .audio-play-btn {
+            background: rgba(125, 191, 224, .12);
+            color: #7DBFE0;
+        }
+
+        /* Input area */
+        [data-ui-style="eris"] .chat-input-area {
+            background: var(--bg-secondary);
+            border-top-color: var(--border-color);
+        }
+
+        [data-ui-style="eris"] .type-bubble {
+            border-radius: 20px;
+            font-weight: 500;
+            transition: all .25s cubic-bezier(.4, 0, .2, 1);
+        }
+
+        [data-ui-style="eris"] .type-bubble:hover {
+            border-color: #7EB8D8;
+            color: #7EB8D8;
+        }
+
+        [data-theme="dark"][data-ui-style="eris"] .type-bubble:hover {
+            border-color: #7DBFE0;
+            color: #7DBFE0;
+        }
+
+        [data-ui-style="eris"] .type-bubble.active {
+            background: #7EB8D8;
+            border-color: #7EB8D8;
+            color: #fff;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(126, 184, 216, .2);
+        }
+
+        [data-theme="dark"][data-ui-style="eris"] .type-bubble.active {
+            background: #7DBFE0;
+            border-color: #7DBFE0;
+            box-shadow: 0 2px 8px rgba(125, 191, 224, .2);
+        }
+
+        [data-ui-style="eris"] .input-field {
+            border-radius: 14px;
+            border-color: var(--border-color);
+            background: var(--bg-tertiary);
+            transition: all .25s cubic-bezier(.4, 0, .2, 1);
+        }
+
+        [data-ui-style="eris"] .input-field:focus {
+            border-color: #7EB8D8;
+            box-shadow: 0 0 0 3px rgba(126, 184, 216, .1);
+        }
+
+        [data-theme="dark"][data-ui-style="eris"] .input-field:focus {
+            border-color: #7DBFE0;
+            box-shadow: 0 0 0 3px rgba(125, 191, 224, .08);
+        }
+
+        [data-ui-style="eris"] .input-field::placeholder {
+            color: var(--text-tertiary);
+        }
+
+        [data-ui-style="eris"] .btn-send {
+            background: #7EB8D8;
+            color: #fff;
+            border-radius: 14px;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(126, 184, 216, .22);
+            transition: all .25s cubic-bezier(.4, 0, .2, 1);
+        }
+
+        [data-ui-style="eris"] .btn-send:hover:not(:disabled) {
+            background: #6AA8CA;
+            box-shadow: 0 4px 16px rgba(126, 184, 216, .32);
+        }
+
+        [data-theme="dark"][data-ui-style="eris"] .btn-send {
+            background: #7DBFE0;
+            box-shadow: 0 2px 8px rgba(125, 191, 224, .22);
+        }
+
+        [data-theme="dark"][data-ui-style="eris"] .btn-send:hover:not(:disabled) {
+            background: #6AB0D4;
+            box-shadow: 0 4px 16px rgba(125, 191, 224, .32);
+        }
+
+        [data-ui-style="eris"] .btn-send:disabled {
+            background: var(--border-color);
+            color: var(--text-tertiary);
+            box-shadow: none;
+        }
+
+        /* File upload button */
+        [data-ui-style="eris"] .file-upload-btn {
+            border-radius: 10px;
+            transition: all .25s cubic-bezier(.4, 0, .2, 1);
+        }
+
+        [data-ui-style="eris"] .file-upload-btn:hover {
+            border-color: #7EB8D8;
+            background: rgba(126, 184, 216, .08);
+        }
+
+        /* Secondary button */
+        [data-ui-style="eris"] .btn-secondary {
+            background: rgba(244, 247, 251, .5);
+            border: 1px solid rgba(126, 184, 216, .2);
+            color: #5A6C7D;
+            border-radius: 10px;
+            transition: all .25s cubic-bezier(.4, 0, .2, 1);
+        }
+
+        [data-ui-style="eris"] .btn-secondary:hover {
+            background: #fff;
+            border-color: rgba(126, 184, 216, .35);
+            color: #2C3E50;
+        }
+
+        [data-theme="dark"][data-ui-style="eris"] .btn-secondary {
+            background: rgba(21, 28, 40, .5);
+            border-color: rgba(125, 191, 224, .15);
+            color: #A0B0C0;
+        }
+
+        [data-theme="dark"][data-ui-style="eris"] .btn-secondary:hover {
+            background: rgba(21, 28, 40, .8);
+            border-color: rgba(125, 191, 224, .3);
+            color: #E2E8F0;
+        }
+
+        /* Modal */
+        [data-ui-style="eris"] .modal-content {
+            background: rgba(255, 255, 255, .92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(221, 227, 236, .5);
+            border-radius: 20px;
+            box-shadow: 0 12px 40px rgba(100, 130, 160, .12);
+        }
+
+        [data-ui-style="eris"] .modal-content h3 {
+            color: #2C3E50;
+            font-weight: 700;
+        }
+
+        [data-theme="dark"][data-ui-style="eris"] .modal-content {
+            background: rgba(26, 34, 48, .92);
+            border-color: rgba(40, 53, 69, .6);
+        }
+
+        [data-theme="dark"][data-ui-style="eris"] .modal-content h3 {
+            color: #E2E8F0;
+        }
+
+        [data-ui-style="eris"] .modal-content .form-group input {
+            border-color: rgba(126, 184, 216, .25);
+            background: rgba(244, 247, 251, .6);
+            border-radius: 12px;
+            transition: all .25s cubic-bezier(.4, 0, .2, 1);
+        }
+
+        [data-ui-style="eris"] .modal-content .form-group input:focus {
+            border-color: #7EB8D8;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(126, 184, 216, .1);
+        }
+
+        [data-theme="dark"][data-ui-style="eris"] .modal-content .form-group input {
+            background: rgba(14, 21, 32, .5);
+            border-color: rgba(125, 191, 224, .15);
+            color: #E2E8F0;
+        }
+
+        [data-theme="dark"][data-ui-style="eris"] .modal-content .form-group input:focus {
+            background: rgba(14, 21, 32, .7);
+            border-color: rgba(125, 191, 224, .4);
+            box-shadow: 0 0 0 3px rgba(125, 191, 224, .08);
+        }
+
+        [data-ui-style="eris"] .modal-content .btn-primary {
+            background: #7EB8D8;
+            color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(126, 184, 216, .22);
+        }
+
+        [data-ui-style="eris"] .modal-content .btn-primary:hover {
+            background: #6AA8CA;
+        }
+
+        [data-theme="dark"][data-ui-style="eris"] .modal-content .btn-primary {
+            background: #7DBFE0;
+        }
+
+        [data-theme="dark"][data-ui-style="eris"] .modal-content .btn-primary:hover {
+            background: #6AB0D4;
+        }
+
+        /* Autocomplete */
+        [data-ui-style="eris"] .autocomplete-dropdown {
+            border-radius: 12px;
+            border-color: var(--border-color);
+            box-shadow: 0 8px 24px rgba(100, 130, 160, .12);
+        }
+
+        [data-ui-style="eris"] .autocomplete-item:hover,
+        [data-ui-style="eris"] .autocomplete-item.active {
+            background: var(--accent-glow);
+        }
+
+        [data-ui-style="eris"] .autocomplete-item-name {
+            color: #7EB8D8;
+        }
+
+        [data-theme="dark"][data-ui-style="eris"] .autocomplete-item-name {
+            color: #7DBFE0;
+        }
+
+        /* Empty state */
+        [data-ui-style="eris"] .empty-state h3 {
+            color: var(--text-primary);
+        }
+
+        /* Markdown content */
+        [data-ui-style="eris"] .markdown-content blockquote {
+            border-left-color: #7EB8D8;
+        }
+
+        [data-theme="dark"][data-ui-style="eris"] .markdown-content blockquote {
+            border-left-color: #7DBFE0;
+        }
+
+        [data-ui-style="eris"] .markdown-content a {
+            color: #7EB8D8;
+        }
+
+        [data-theme="dark"][data-ui-style="eris"] .markdown-content a {
+            color: #7DBFE0;
+        }
+
+        [data-ui-style="eris"] .markdown-content code {
+            background: var(--accent-glow);
+        }
+
+        /* Delete button */
+        [data-ui-style="eris"] .btn-delete-user:hover {
+            background: rgba(198, 40, 40, .08);
+            color: #C62828;
+        }
+
+        /* Hamburger */
+        [data-ui-style="eris"] .btn-hamburger {
+            border-radius: 10px;
+            transition: all .25s cubic-bezier(.4, 0, .2, 1);
+        }
+
+        [data-ui-style="eris"] .btn-hamburger:hover {
+            border-color: #7EB8D8;
+        }
+
+        /* Image modal */
+        [data-ui-style="eris"] .image-modal {
+            backdrop-filter: blur(8px);
+        }
+
+        /* Scrollbar */
+        [data-ui-style="eris"] .chat-messages::-webkit-scrollbar-thumb,
+        [data-ui-style="eris"] .sidebar-user-list::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        /* Form group labels */
+        [data-ui-style="eris"] .form-group label {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        /* UI Style toggle button - removed, now in settings */
+
+        /* Settings modal */
+        .settings-modal-content {
+            max-width: 420px;
+        }
+
+        .settings-section {
+            margin-bottom: 16px;
+        }
+
+        .settings-section-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .6px;
+            color: var(--text-tertiary);
+            margin-bottom: 12px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .settings-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 10px 0;
+        }
+
+        .settings-row + .settings-row {
+            border-top: 1px solid var(--border-color);
+        }
+
+        .settings-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .settings-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        /* Switch component */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 22px;
+            flex-shrink: 0;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .switch-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--border-color);
+            border-radius: 22px;
+            transition: .3s;
+        }
+
+        .switch-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            border-radius: 50%;
+            transition: .3s;
+        }
+
+        .switch input:checked + .switch-slider {
+            background: var(--bubble-active);
+        }
+
+        .switch input:checked + .switch-slider:before {
+            transform: translateX(18px);
+        }
+
+        /* Eris settings modal overrides */
+        [data-ui-style="eris"] .switch input:checked + .switch-slider {
+            background: #7EB8D8;
+        }
+
+        [data-theme="dark"][data-ui-style="eris"] .switch input:checked + .switch-slider {
+            background: #7DBFE0;
+        }
+
+        [data-ui-style="eris"] .settings-section-title {
+            color: #A0B0C0;
+        }
+
+        /* ========== 群聊 ========== */
+        .sidebar-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .sidebar-tab {
+            flex: 1;
+            padding: 10px 0;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+            border-bottom: 2px solid transparent;
+        }
+        .sidebar-tab:hover { color: var(--text-primary); }
+        .sidebar-tab.active {
+            color: var(--text-primary);
+            border-bottom-color: var(--bubble-active);
+        }
+        [data-ui-style="eris"] .sidebar-tab.active { border-bottom-color: #7EB8D8; color: #7EB8D8; }
+        [data-theme="dark"][data-ui-style="eris"] .sidebar-tab.active { border-bottom-color: #7DBFE0; color: #7DBFE0; }
+
+        .sidebar-list { display: none; }
+        .sidebar-list.visible { display: block; flex: 1; overflow-y: auto; padding: 8px; }
+        .sidebar-list::-webkit-scrollbar { width: 4px; }
+        .sidebar-list::-webkit-scrollbar-track { background: transparent; }
+        .sidebar-list::-webkit-scrollbar-thumb { background-color: var(--border-color); border-radius: 2px; }
+
+        .sidebar-group-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 12px;
+            margin-bottom: 4px;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .sidebar-group-item:hover { background: var(--bg-tertiary); }
+        .sidebar-group-item.active { background: var(--bubble-active); border-color: var(--bubble-active); }
+
+        [data-ui-style="eris"] .sidebar-group-item {
+            border-radius: 10px;
+            position: relative;
+            transition: all .2s ease;
+        }
+        [data-ui-style="eris"] .sidebar-group-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 8px;
+            bottom: 8px;
+            width: 3px;
+            border-radius: 0 3px 3px 0;
+            background: transparent;
+            transition: background .25s ease;
+        }
+        [data-ui-style="eris"] .sidebar-group-item:hover {
+            background: var(--bg-tertiary);
+            transform: translateX(2px);
+        }
+        [data-ui-style="eris"] .sidebar-group-item:hover::before { background: var(--border-hover); }
+        [data-ui-style="eris"] .sidebar-group-item.active {
+            background: var(--accent-glow);
+            border-color: transparent;
+        }
+        [data-ui-style="eris"] .sidebar-group-item.active::before { background: #7EB8D8; }
+        [data-theme="dark"][data-ui-style="eris"] .sidebar-group-item.active { background: var(--accent-glow); }
+        [data-theme="dark"][data-ui-style="eris"] .sidebar-group-item.active::before { background: #7DBFE0; }
+
+        .sidebar-group-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: var(--bg-tertiary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        .sidebar-group-info { flex: 1; min-width: 0; }
+        .sidebar-group-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .sidebar-group-meta {
+            font-size: 11px;
+            color: var(--text-tertiary);
+        }
+
+        .group-member-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin: 2px 4px 2px 0;
+        }
+
         /* 响应式 */
         @media (max-width: 768px) {
             .header-left {
@@ -1517,6 +2368,32 @@
                 font-size: 13px;
             }
         }
+
+        /* ========== ErisPulse Responsive ========== */
+        @media (max-width: 768px) {
+            [data-ui-style="eris"] .setup-card {
+                padding: 30px 24px;
+                border-radius: 16px;
+            }
+
+            [data-ui-style="eris"] .setup-card h1 {
+                font-size: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            [data-ui-style="eris"] .setup-card {
+                padding: 24px 20px;
+            }
+
+            [data-ui-style="eris"] .setup-card h1 {
+                font-size: 18px;
+            }
+
+            [data-ui-style="eris"] .sidebar {
+                width: 260px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1546,12 +2423,10 @@
             </div>
             <div class="header-right">
                 <div class="status" id="connectionStatus">连接中...</div>
-                <button class="btn-theme" id="btnTheme" aria-label="切换主题">
-                    <svg class="icon-moon" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>
-                    </svg>
-                    <svg class="icon-sun" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/>
+                <button class="btn-icon" id="btnSettings" aria-label="设置" title="设置">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                        <circle cx="12" cy="12" r="3"/>
                     </svg>
                 </button>
             </div>
@@ -1560,15 +2435,22 @@
         <div class="main">
             <!-- 侧边栏 -->
             <div class="sidebar">
-                <div class="sidebar-header">
-                    <h3>账户列表</h3>
-                    <button class="btn-add-account" id="btnAddAccount" aria-label="添加账户">
-                        <svg viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-                        </svg>
-                    </button>
+                <div class="sidebar-tabs">
+                    <button class="sidebar-tab active" data-tab="users" id="sidebarTabUsers">私聊</button>
+                    <button class="sidebar-tab" data-tab="groups" id="sidebarTabGroups">群聊</button>
                 </div>
-                <div class="sidebar-user-list" id="sidebarUserList"></div>
+                <div class="sidebar-list visible" id="sidebarUserList">
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:0 4px 8px 4px">
+                        <span style="font-size:12px;font-weight:600;color:var(--text-secondary)">账户列表</span>
+                        <button id="btnAddAccount" style="width:26px;height:26px;border:1px solid var(--border-color);background:var(--bg-tertiary);border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-primary);font-size:16px;line-height:1" title="添加账户">+</button>
+                    </div>
+                </div>
+                <div class="sidebar-list" id="sidebarGroupList">
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:0 4px 8px 4px">
+                        <span style="font-size:12px;font-weight:600;color:var(--text-secondary)">群组列表</span>
+                        <button id="btnCreateGroup" style="width:26px;height:26px;border:1px solid var(--border-color);background:var(--bg-tertiary);border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-primary);font-size:16px;line-height:1" title="创建群组">+</button>
+                    </div>
+                </div>
             </div>
             
             <div class="chat-area">
@@ -1630,18 +2512,73 @@
         </div>
     </div>
 
+    <!-- 创建群组模态框 -->
+    <div class="modal" id="createGroupModal">
+        <div class="modal-content">
+            <h3>创建群组</h3>
+            <div class="form-group">
+                <label for="groupName">群组名称</label>
+                <input type="text" id="groupName" placeholder="请输入群组名称" maxlength="32">
+            </div>
+            <div class="form-group">
+                <label>选择成员</label>
+                <div id="groupMemberCheckboxes" style="max-height:180px;overflow-y:auto;border:1px solid var(--border-color);border-radius:8px;padding:8px"></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" id="btnCancelCreateGroup">取消</button>
+                <button class="btn-primary" id="btnConfirmCreateGroup">创建</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 侧边栏遮罩层 -->
     <div class="overlay" id="sidebarOverlay"></div>
+
+    <!-- 设置面板 -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content settings-modal-content">
+            <h3>设置</h3>
+            <div class="settings-section">
+                <div class="settings-section-title">外观</div>
+                <div class="settings-row">
+                    <div>
+                        <div class="settings-label">深色模式</div>
+                        <div class="settings-desc">切换深色/浅色界面</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="settingsDarkMode">
+                        <span class="switch-slider"></span>
+                    </label>
+                </div>
+                <div class="settings-row">
+                    <div>
+                        <div class="settings-label">ErisPulse 主题</div>
+                        <div class="settings-desc">使用 ErisPulse 配色方案</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="settingsErisTheme">
+                        <span class="switch-slider"></span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" id="btnCloseSettings">关闭</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         // 应用状态
         let currentUser = null;
         let currentSelectedUser = null;
+        let currentSelectedGroup = null;
         let users = [];
+        let groups = [];
         let messages = [];
         let ws = null;
         let selfId = '';
         let currentMessageType = 'text';
+        let currentChatType = 'private'; // 'private' | 'group'
         
         // 命令自动补全
         let commands = [];
@@ -1673,19 +2610,30 @@
         const btnFileUpload = document.getElementById('btnFileUpload');
         const imageModal = document.getElementById('imageModal');
         const imageModalImg = document.getElementById('imageModalImg');
-        const btnTheme = document.getElementById('btnTheme');
+        const btnSettings = document.getElementById('btnSettings');
+        const settingsModal = document.getElementById('settingsModal');
+        const btnCloseSettings = document.getElementById('btnCloseSettings');
+        const settingsDarkMode = document.getElementById('settingsDarkMode');
+        const settingsErisTheme = document.getElementById('settingsErisTheme');
 
         // 主题管理
         function initTheme() {
             const savedTheme = localStorage.getItem('sandbox_theme') || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);
+            initUiStyle();
+            syncSettingsUI();
         }
 
-        function toggleTheme() {
-            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            document.documentElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('sandbox_theme', newTheme);
+        function initUiStyle() {
+            const savedStyle = localStorage.getItem('sandbox_ui_style') || 'eris';
+            document.documentElement.setAttribute('data-ui-style', savedStyle);
+        }
+
+        function syncSettingsUI() {
+            const theme = document.documentElement.getAttribute('data-theme') || 'light';
+            const uiStyle = document.documentElement.getAttribute('data-ui-style') || 'eris';
+            settingsDarkMode.checked = (theme === 'dark');
+            settingsErisTheme.checked = (uiStyle === 'eris');
         }
 
         // 初始化主题
@@ -1767,6 +2715,8 @@
             if (savedCurrentUser) {
                 currentUser = JSON.parse(savedCurrentUser);
             }
+            
+            loadGroupData();
         }
 
         // 打开侧边栏
@@ -1816,10 +2766,10 @@
             setupPage.style.display = 'none';
             mainApp.style.display = 'flex';
             connectWebSocket();
-            renderSidebarUserList();
+            renderSidebar();
             
             // 自动选择第一个用户
-            if (users.length > 0 && !currentSelectedUser) {
+            if (users.length > 0 && !currentSelectedUser && !currentSelectedGroup) {
                 selectUser(users[0]);
             }
         }
@@ -1883,17 +2833,40 @@
                 }
             }
             
+            renderSidebar();
+        }
+
+        // 保存/加载群组数据
+        function saveGroupData() {
+            localStorage.setItem('sandbox_v2_groups', JSON.stringify(groups));
+        }
+
+        function loadGroupData() {
+            const saved = localStorage.getItem('sandbox_v2_groups');
+            if (saved) {
+                groups = JSON.parse(saved);
+            }
+        }
+
+        // 渲染侧边栏（用户列表 + 群组列表）
+        function renderSidebar() {
             renderSidebarUserList();
+            renderSidebarGroupList();
         }
 
         // 渲染侧边栏用户列表
+
+        // 渲染侧边栏用户列表
         function renderSidebarUserList() {
-            sidebarUserList.innerHTML = '';
+            const listEl = document.getElementById('sidebarUserList');
+            // Keep the header line, remove all user items
+            const existingItems = listEl.querySelectorAll('.sidebar-user-item');
+            existingItems.forEach(el => el.remove());
             
             users.forEach(user => {
                 const item = document.createElement('div');
                 item.className = 'sidebar-user-item';
-                if (currentSelectedUser && currentSelectedUser.id === user.id) {
+                if (currentChatType === 'private' && currentSelectedUser && currentSelectedUser.id === user.id) {
                     item.classList.add('active');
                 }
                 
@@ -1918,48 +2891,94 @@
                 const deleteBtn = item.querySelector('.btn-delete-user');
                 deleteBtn.addEventListener('click', (e) => deleteUser(user.id, e));
                 
-                sidebarUserList.appendChild(item);
+                listEl.appendChild(item);
             });
         }
 
-        // 选择用户
+        // 渲染侧边栏群组列表
+        function renderSidebarGroupList() {
+            const listEl = document.getElementById('sidebarGroupList');
+            const existingItems = listEl.querySelectorAll('.sidebar-group-item');
+            existingItems.forEach(el => el.remove());
+            
+            groups.forEach(group => {
+                const item = document.createElement('div');
+                item.className = 'sidebar-group-item';
+                if (currentChatType === 'group' && currentSelectedGroup && currentSelectedGroup.group_id === group.group_id) {
+                    item.classList.add('active');
+                }
+                
+                const memberCount = (group.members || []).length;
+                
+                item.innerHTML = `
+                    <div class="sidebar-group-avatar">${getUserInitial(group.group_name)}</div>
+                    <div class="sidebar-group-info">
+                        <div class="sidebar-group-name">${escapeHtml(group.group_name)}</div>
+                        <div class="sidebar-group-meta">${memberCount} 位成员</div>
+                    </div>
+                `;
+                
+                item.addEventListener('click', () => selectGroup(group));
+                listEl.appendChild(item);
+            });
+        }
+
+        // 获取当前联系人ID和类型
+        function getCurrentContact() {
+            if (currentChatType === 'group' && currentSelectedGroup) {
+                return { id: currentSelectedGroup.group_id, type: 'group', name: currentSelectedGroup.group_name };
+            }
+            if (currentSelectedUser) {
+                return { id: currentSelectedUser.id, type: 'private', name: currentSelectedUser.name };
+            }
+            return null;
+        }
+
+        // 选择用户（私聊）
         function selectUser(user) {
             currentSelectedUser = user;
+            currentSelectedGroup = null;
+            currentChatType = 'private';
             renderChatHeader();
-            renderSidebarUserList();
-            
-            // 加载该用户的消息
-            loadMessages(user.id);
-            
+            renderSidebar();
+            loadMessages(user.id, 'private');
+            messageInput.disabled = false;
+            btnSend.disabled = false;
+        }
+
+        // 选择群组
+        function selectGroup(group) {
+            currentSelectedGroup = group;
+            currentSelectedUser = null;
+            currentChatType = 'group';
+            renderChatHeader();
+            renderSidebar();
+            loadMessages(group.group_id, 'group');
             messageInput.disabled = false;
             btnSend.disabled = false;
         }
 
         // 渲染聊天头部
         function renderChatHeader() {
-            if (currentSelectedUser) {
-                chatHeaderTitle.textContent = `当前账户: ${escapeHtml(currentSelectedUser.name)}`;
+            const contact = getCurrentContact();
+            if (contact) {
+                chatHeaderTitle.textContent = `${currentChatType === 'group' ? '群聊' : '私聊'}: ${escapeHtml(contact.name)}`;
             } else {
                 chatHeaderTitle.textContent = '沙箱 Bot';
             }
         }
 
         // 加载消息
-        function loadMessages(userId) {
-            if (!ws || !userId) return;
+        function loadMessages(contactId, contactType) {
+            if (!ws || !contactId) return;
             
-            // 检查 WebSocket 连接状态
             if (ws.readyState !== WebSocket.OPEN) {
-                // 如果还没连接完成，等待连接后再发送
                 const checkConnection = setInterval(() => {
                     if (ws.readyState === WebSocket.OPEN) {
                         clearInterval(checkConnection);
                         ws.send(JSON.stringify({
                             type: 'load_messages',
-                            data: {
-                                contact_id: userId,
-                                contact_type: 'private'
-                            }
+                            data: { contact_id: contactId, contact_type: contactType }
                         }));
                     } else if (ws.readyState === WebSocket.CLOSED) {
                         clearInterval(checkConnection);
@@ -1970,16 +2989,14 @@
             
             ws.send(JSON.stringify({
                 type: 'load_messages',
-                data: {
-                    contact_id: userId,
-                    contact_type: 'private'
-                }
+                data: { contact_id: contactId, contact_type: contactType }
             }));
         }
 
         // 渲染消息
         function renderMessages() {
-            if (!currentSelectedUser) {
+            const contact = getCurrentContact();
+            if (!contact) {
                 chatMessages.innerHTML = `
                     <div class="empty-state">
                         <h3>暂无消息</h3>
@@ -2002,18 +3019,27 @@
             chatMessages.innerHTML = '';
             messages.forEach(msg => {
                 const isFromBot = msg.user_id === selfId;
-                const isFromUser = msg.user_id === currentSelectedUser.id;
+                let isFromMe = false;
+                
+                if (currentChatType === 'group') {
+                    isFromMe = !isFromBot && msg.user_id === currentUser?.id;
+                } else {
+                    isFromMe = !isFromBot;
+                }
                 
                 const messageDiv = document.createElement('div');
-                messageDiv.className = isFromBot ? 'message received' : 'message sent';
+                messageDiv.className = isFromMe ? 'message sent' : 'message received';
                 
-                const time = formatMessageTime(msg.timestamp * 1000);
-                const showSender = !isFromBot;
+                const time = formatMessageTime((msg.timestamp || 0) * 1000);
+                
+                // Show sender name in group chats for non-bot messages
+                const showSender = currentChatType === 'group' && !isFromMe && !isFromBot;
+                const senderLabel = showSender ? (msg.user_name || msg.user_id) : '';
                 
                 const contentHtml = renderMessageContent(msg);
                 
                 messageDiv.innerHTML = `
-                    ${showSender ? `<div class="message-sender">${escapeHtml(msg.user_name || msg.user_id)}</div>` : ''}
+                    ${showSender ? `<div class="message-sender">${escapeHtml(senderLabel)}</div>` : ''}
                     <div class="message-content">${contentHtml}</div>
                     <div class="message-time">${time}</div>
                 `;
@@ -2075,16 +3101,15 @@
 
         // 发送消息
         function sendMessage() {
+            const contact = getCurrentContact();
+            if (!contact) return;
+            
             const message = messageInput.value.trim();
-            if (!currentSelectedUser) return;
             
             const noContentTypes = ['dice', 'rps'];
             if (!noContentTypes.includes(currentMessageType) && !message) return;
             
-            console.log('[Sandbox] sendMessage called, ws:', ws ? 'exists' : 'null', 'readyState:', ws ? ws.readyState : 'N/A', '(0=CONNECTING,1=OPEN,2=CLOSING,3=CLOSED)');
-            
             if (!ws || ws.readyState !== WebSocket.OPEN) {
-                console.warn('[Sandbox] WebSocket not ready, aborting send');
                 alert('WebSocket 未连接，请等待重连后重试');
                 return;
             }
@@ -2128,18 +3153,22 @@
             const messageData = {
                 type: 'send_message',
                 data: {
-                    message_type: 'private',
+                    message_type: contact.type === 'group' ? 'group' : 'private',
                     message: message,
                     message_type_detail: currentMessageType,
                     message_segments: messageSegments,
-                    user_id: currentSelectedUser.id,
-                    user_name: currentSelectedUser.name
+                    user_id: currentUser?.id || '',
+                    user_name: currentUser?.name || ''
                 }
             };
             
+            if (contact.type === 'group') {
+                messageData.data.group_id = contact.id;
+                messageData.data.group_name = contact.name;
+            }
+            
             try {
                 ws.send(JSON.stringify(messageData));
-                console.log('[Sandbox] ws.send() succeeded for message:', message.substring(0, 50));
             } catch (e) {
                 console.error('[Sandbox] ws.send() failed:', e);
                 alert('消息发送失败，请重试');
@@ -2148,14 +3177,19 @@
             
             const localMessage = {
                 type: 'message',
-                message_type: 'private',
-                user_id: currentSelectedUser.id,
-                user_name: currentSelectedUser.name,
+                message_type: contact.type === 'group' ? 'group' : 'private',
+                user_id: currentUser?.id || '',
+                user_name: currentUser?.name || '',
                 message: message,
                 message_type_detail: currentMessageType,
                 message_segments: messageSegments,
                 timestamp: Math.floor(Date.now() / 1000)
             };
+            
+            if (contact.type === 'group') {
+                localMessage.group_id = contact.id;
+                localMessage.group_name = contact.name;
+            }
             
             messages.push(localMessage);
             renderMessages();
@@ -2178,10 +3212,11 @@
             connectionStatus.classList.add('connected');
             connectionStatus.classList.remove('disconnected');
             
-            if (currentSelectedUser) {
+            const contact = getCurrentContact();
+            if (contact) {
                 messageInput.disabled = false;
                 btnSend.disabled = false;
-                loadMessages(currentSelectedUser.id);
+                loadMessages(contact.id, contact.type);
             }
             
             loadCommands();
@@ -2221,7 +3256,8 @@
                     break;
                     
                 case 'messages_loaded':
-                    if (data.data.contact_id === (currentSelectedUser?.id)) {
+                    const mContact = getCurrentContact();
+                    if (mContact && data.data.contact_id === mContact.id && data.data.contact_type === mContact.type) {
                         messages = data.data.messages || [];
                         renderMessages();
                     }
@@ -2229,24 +3265,51 @@
                     
                 case 'message':
                     const msgData = data.data;
-                    if (!currentSelectedUser) return;
+                    const contact = getCurrentContact();
+                    if (!contact) return;
                     
-                    const isUserMessage = msgData.user_id === currentSelectedUser.id && msgData.target_id === selfId;
-                    const isBotMessage = msgData.user_id === selfId && msgData.target_id === currentSelectedUser.id;
-                    
-                    if (isUserMessage || isBotMessage) {
-                        messages.push(msgData);
-                        renderMessages();
+                    if (contact.type === 'group') {
+                        // 群消息：匹配 group_id
+                        if (msgData.group_id === contact.id || msgData.target_id === contact.id) {
+                            messages.push(msgData);
+                            renderMessages();
+                        }
+                    } else {
+                        // 私聊消息：匹配 user_id 和 target_id
+                        const isUserMessage = msgData.user_id === contact.id && msgData.target_id === selfId;
+                        const isBotMessage = msgData.user_id === selfId && msgData.target_id === contact.id;
+                        if (isUserMessage || isBotMessage) {
+                            messages.push(msgData);
+                            renderMessages();
+                        }
                     }
+                    break;
+                    
+                case 'group_created':
+                    groups.push(data.data);
+                    saveGroupData();
+                    renderSidebar();
+                    break;
+                    
+                case 'group_updated':
+                    const updatedGroup = data.data;
+                    const idx = groups.findIndex(g => g.group_id === updatedGroup.group_id);
+                    if (idx !== -1) {
+                        groups[idx] = updatedGroup;
+                    }
+                    saveGroupData();
+                    renderSidebar();
+                    break;
+                    
+                case 'error':
+                    console.error('[Sandbox] Error:', data.data.message);
                     break;
                     
                 case 'api_response':
                     const apiData = data.data;
                     if (apiData.status === 'ok' && apiData.data && apiData.data.commands) {
-                        // 更新命令列表
                         commands = apiData.data.commands;
                         commandPrefix = apiData.data.prefix || '/';
-                        console.log(`加载了 ${apiData.data.total} 个命令`);
                     }
                     break;
             }
@@ -2291,8 +3354,67 @@
 
             const newUser = createUser(name);
             addUserModal.classList.remove('show');
-            renderSidebarUserList();
+            renderSidebar();
             selectUser(newUser);
+        });
+
+        // 创建群组按钮
+        document.getElementById('btnCreateGroup').addEventListener('click', () => {
+            document.getElementById('groupName').value = '';
+            renderGroupMemberCheckboxes();
+            document.getElementById('createGroupModal').classList.add('show');
+        });
+
+        document.getElementById('btnCancelCreateGroup').addEventListener('click', () => {
+            document.getElementById('createGroupModal').classList.remove('show');
+        });
+
+        document.getElementById('btnConfirmCreateGroup').addEventListener('click', () => {
+            const groupName = document.getElementById('groupName').value.trim();
+            if (!groupName) {
+                alert('请输入群组名称');
+                return;
+            }
+            const checkboxes = document.querySelectorAll('#groupMemberCheckboxes input[type="checkbox"]:checked');
+            const members = Array.from(checkboxes).map(cb => cb.value);
+            if (members.length === 0) {
+                alert('请至少选择一个成员');
+                return;
+            }
+            
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'create_group',
+                    data: { group_name: groupName, members: members }
+                }));
+            }
+            
+            document.getElementById('createGroupModal').classList.remove('show');
+        });
+
+        function renderGroupMemberCheckboxes() {
+            const container = document.getElementById('groupMemberCheckboxes');
+            container.innerHTML = users.map(u => `
+                <label style="display:flex;align-items:center;gap:8px;padding:6px 10px;cursor:pointer;font-size:13px;color:var(--text-primary)">
+                    <input type="checkbox" value="${u.id}" ${u.id === currentUser?.id ? 'checked' : ''}>
+                    ${escapeHtml(u.name)} (${u.id.substring(0,10)}...)
+                </label>
+            `).join('');
+        }
+
+        // 侧边栏 Tab 切换
+        document.getElementById('sidebarTabUsers').addEventListener('click', function() {
+            document.getElementById('sidebarTabUsers').classList.add('active');
+            document.getElementById('sidebarTabGroups').classList.remove('active');
+            document.getElementById('sidebarUserList').classList.add('visible');
+            document.getElementById('sidebarGroupList').classList.remove('visible');
+        });
+
+        document.getElementById('sidebarTabGroups').addEventListener('click', function() {
+            document.getElementById('sidebarTabGroups').classList.add('active');
+            document.getElementById('sidebarTabUsers').classList.remove('active');
+            document.getElementById('sidebarGroupList').classList.add('visible');
+            document.getElementById('sidebarUserList').classList.remove('visible');
         });
 
         // 需要上传文件的媒体类型
@@ -2327,8 +3449,33 @@
 
         btnSend.addEventListener('click', sendMessage);
 
-        // 主题切换按钮
-        btnTheme.addEventListener('click', toggleTheme);
+        // 设置按钮
+        btnSettings.addEventListener('click', () => {
+            syncSettingsUI();
+            settingsModal.classList.add('show');
+        });
+
+        btnCloseSettings.addEventListener('click', () => {
+            settingsModal.classList.remove('show');
+        });
+
+        settingsModal.addEventListener('click', (e) => {
+            if (e.target === settingsModal) {
+                settingsModal.classList.remove('show');
+            }
+        });
+
+        settingsDarkMode.addEventListener('change', () => {
+            const newTheme = settingsDarkMode.checked ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('sandbox_theme', newTheme);
+        });
+
+        settingsErisTheme.addEventListener('change', () => {
+            const newStyle = settingsErisTheme.checked ? 'eris' : 'default';
+            document.documentElement.setAttribute('data-ui-style', newStyle);
+            localStorage.setItem('sandbox_ui_style', newStyle);
+        });
 
         // 汉堡菜单按钮 - 打开侧边栏
         btnHamburger.addEventListener('click', openSidebar);
@@ -2338,7 +3485,7 @@
 
         // 选择用户时关闭侧边栏（移动端）
         document.addEventListener('click', (e) => {
-            if (e.target.closest('.sidebar-user-item') && !e.target.closest('.btn-delete-user')) {
+            if ((e.target.closest('.sidebar-user-item') || e.target.closest('.sidebar-group-item')) && !e.target.closest('.btn-delete-user')) {
                 if (window.innerWidth <= 768) {
                     closeSidebar();
                 }
