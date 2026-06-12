@@ -1,4 +1,4 @@
-# ErisPulse 沙箱适配器
+# ErisPulse 沙箱适配器 (v4.0.0)
 
 ErisPulse 的沙箱适配器，提供网页界面用于调试和模拟消息，
 可以帮助您在不接入实际机器人平台的情况下进行开发和测试。
@@ -12,12 +12,13 @@ pip install ErisPulse-SandboxAdapter
 
 ## 配置
 
-在 `config.toml` 中添加以下配置：
+首次运行会自动生成默认配置。
 
 ```toml
+# config.toml
 [SandboxAdapter]
-self_id = "sandbox_bot"
-enable = true
+self_id = "sandbox_bot"        # 沙箱机器人ID（可选，默认为 sandbox_bot）
+enable = true                  # 是否启用（可选，默认为true）
 ```
 
 ## 消息发送
