@@ -2431,7 +2431,7 @@
                 </button>
             </div>
         </div>
-        
+
         <div class="main">
             <!-- 侧边栏 -->
             <div class="sidebar">
@@ -2452,7 +2452,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="chat-area">
                 <div class="chat-header">
                     <h2 id="chatHeaderTitle">沙箱 Bot</h2>
@@ -2579,10 +2579,11 @@
         let selfId = '';
         let currentMessageType = 'text';
         let currentChatType = 'private'; // 'private' | 'group'
-        
+
         // 命令自动补全
         let commands = [];
         let commandPrefix = '/';
+        let commandPrefixes = ['/'];
         let autocompleteIndex = -1;
         let autocompleteItems = [];
 
@@ -2652,16 +2653,16 @@
         // 移动端虚拟键盘处理
         if (window.visualViewport) {
             let previousHeight = window.visualViewport.height;
-            
+
             window.visualViewport.addEventListener('resize', () => {
                 const currentHeight = window.visualViewport.height;
                 const heightDiff = previousHeight - currentHeight;
-                
+
                 // 键盘弹出（高度减少超过 100px 通常表示键盘弹出）
                 if (heightDiff > 100) {
                     document.body.classList.add('keyboard-open');
                     document.documentElement.style.setProperty('--keyboard-height', `${heightDiff}px`);
-                    
+
                     // 滚动到输入框
                     setTimeout(() => {
                         messageInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -2671,7 +2672,7 @@
                     document.body.classList.remove('keyboard-open');
                     document.documentElement.style.setProperty('--keyboard-height', '0px');
                 }
-                
+
                 previousHeight = currentHeight;
             });
         }
@@ -2715,7 +2716,7 @@
             if (savedCurrentUser) {
                 currentUser = JSON.parse(savedCurrentUser);
             }
-            
+
             loadGroupData();
         }
 
@@ -2734,7 +2735,7 @@
         // 初始化应用
         function initApp() {
             loadUserData();
-            
+
             // 检查用户数据一致性
             if (currentUser) {
                 // 验证 currentUser 是否在 users 数组中
@@ -2767,7 +2768,7 @@
             mainApp.style.display = 'flex';
             connectWebSocket();
             renderSidebar();
-            
+
             // 自动选择第一个用户
             if (users.length > 0 && !currentSelectedUser && !currentSelectedGroup) {
                 selectUser(users[0]);
@@ -2780,7 +2781,7 @@
                 id: generateUserId(),
                 name: name
             };
-            
+
             users.push(user);
             saveUserData();
             return user;
@@ -2795,18 +2796,18 @@
         // 删除用户
         function deleteUser(userId, event) {
             event.stopPropagation();
-            
+
             const index = users.findIndex(u => u.id === userId);
             if (index === -1) return;
-            
+
             const userName = users[index].name;
             if (!confirm(`确定要删除账户 "${userName}" 吗？\n删除后该账户的聊天记录将无法恢复。`)) {
                 return;
             }
-            
+
             users.splice(index, 1);
             saveUserData();
-            
+
             // 如果删除的是当前选中的用户，切换到第一个用户
             if (currentSelectedUser && currentSelectedUser.id === userId) {
                 if (users.length > 0) {
@@ -2819,7 +2820,7 @@
                     btnSend.disabled = true;
                 }
             }
-            
+
             // 如果删除的是当前登录用户
             if (currentUser && currentUser.id === userId) {
                 if (users.length > 0) {
@@ -2832,7 +2833,7 @@
                     return;
                 }
             }
-            
+
             renderSidebar();
         }
 
@@ -2862,14 +2863,14 @@
             // Keep the header line, remove all user items
             const existingItems = listEl.querySelectorAll('.sidebar-user-item');
             existingItems.forEach(el => el.remove());
-            
+
             users.forEach(user => {
                 const item = document.createElement('div');
                 item.className = 'sidebar-user-item';
                 if (currentChatType === 'private' && currentSelectedUser && currentSelectedUser.id === user.id) {
                     item.classList.add('active');
                 }
-                
+
                 item.innerHTML = `
                     <div class="sidebar-user-avatar">${getUserInitial(user.name)}</div>
                     <div class="sidebar-user-info">
@@ -2882,15 +2883,15 @@
                         </svg>
                     </button>
                 `;
-                
+
                 item.addEventListener('click', (e) => {
                     if (e.target.closest('.btn-delete-user')) return;
                     selectUser(user);
                 });
-                
+
                 const deleteBtn = item.querySelector('.btn-delete-user');
                 deleteBtn.addEventListener('click', (e) => deleteUser(user.id, e));
-                
+
                 listEl.appendChild(item);
             });
         }
@@ -2900,16 +2901,16 @@
             const listEl = document.getElementById('sidebarGroupList');
             const existingItems = listEl.querySelectorAll('.sidebar-group-item');
             existingItems.forEach(el => el.remove());
-            
+
             groups.forEach(group => {
                 const item = document.createElement('div');
                 item.className = 'sidebar-group-item';
                 if (currentChatType === 'group' && currentSelectedGroup && currentSelectedGroup.group_id === group.group_id) {
                     item.classList.add('active');
                 }
-                
+
                 const memberCount = (group.members || []).length;
-                
+
                 item.innerHTML = `
                     <div class="sidebar-group-avatar">${getUserInitial(group.group_name)}</div>
                     <div class="sidebar-group-info">
@@ -2917,7 +2918,7 @@
                         <div class="sidebar-group-meta">${memberCount} 位成员</div>
                     </div>
                 `;
-                
+
                 item.addEventListener('click', () => selectGroup(group));
                 listEl.appendChild(item);
             });
@@ -2971,7 +2972,7 @@
         // 加载消息
         function loadMessages(contactId, contactType) {
             if (!ws || !contactId) return;
-            
+
             if (ws.readyState !== WebSocket.OPEN) {
                 const checkConnection = setInterval(() => {
                     if (ws.readyState === WebSocket.OPEN) {
@@ -2986,7 +2987,7 @@
                 }, 100);
                 return;
             }
-            
+
             ws.send(JSON.stringify({
                 type: 'load_messages',
                 data: { contact_id: contactId, contact_type: contactType }
@@ -3020,33 +3021,33 @@
             messages.forEach(msg => {
                 const isFromBot = msg.user_id === selfId;
                 let isFromMe = false;
-                
+
                 if (currentChatType === 'group') {
                     isFromMe = !isFromBot && msg.user_id === currentUser?.id;
                 } else {
                     isFromMe = !isFromBot;
                 }
-                
+
                 const messageDiv = document.createElement('div');
                 messageDiv.className = isFromMe ? 'message sent' : 'message received';
-                
+
                 const time = formatMessageTime((msg.timestamp || 0) * 1000);
-                
+
                 // Show sender name in group chats for non-bot messages
                 const showSender = currentChatType === 'group' && !isFromMe && !isFromBot;
                 const senderLabel = showSender ? (msg.user_name || msg.user_id) : '';
-                
+
                 const contentHtml = renderMessageContent(msg);
-                
+
                 messageDiv.innerHTML = `
                     ${showSender ? `<div class="message-sender">${escapeHtml(senderLabel)}</div>` : ''}
                     <div class="message-content">${contentHtml}</div>
                     <div class="message-time">${time}</div>
                 `;
-                
+
                 chatMessages.appendChild(messageDiv);
             });
-            
+
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
@@ -3080,7 +3081,7 @@
         function formatMessageTime(timestamp) {
             const now = Date.now();
             const diff = now - timestamp;
-            
+
             if (diff < 60000) return '刚刚';
             if (diff < 3600000) {
                 const minutes = Math.floor(diff / 60000);
@@ -3103,19 +3104,19 @@
         function sendMessage() {
             const contact = getCurrentContact();
             if (!contact) return;
-            
+
             const message = messageInput.value.trim();
-            
+
             const noContentTypes = ['dice', 'rps'];
             if (!noContentTypes.includes(currentMessageType) && !message) return;
-            
+
             if (!ws || ws.readyState !== WebSocket.OPEN) {
                 alert('WebSocket 未连接，请等待重连后重试');
                 return;
             }
-            
+
             let messageSegments = [];
-            
+
             try {
                 switch (currentMessageType) {
                     case 'text':
@@ -3149,7 +3150,7 @@
                 alert('消息格式错误: ' + e.message);
                 return;
             }
-            
+
             const messageData = {
                 type: 'send_message',
                 data: {
@@ -3161,12 +3162,12 @@
                     user_name: currentUser?.name || ''
                 }
             };
-            
+
             if (contact.type === 'group') {
                 messageData.data.group_id = contact.id;
                 messageData.data.group_name = contact.name;
             }
-            
+
             try {
                 ws.send(JSON.stringify(messageData));
             } catch (e) {
@@ -3174,7 +3175,7 @@
                 alert('消息发送失败，请重试');
                 return;
             }
-            
+
             const localMessage = {
                 type: 'message',
                 message_type: contact.type === 'group' ? 'group' : 'private',
@@ -3185,15 +3186,15 @@
                 message_segments: messageSegments,
                 timestamp: Math.floor(Date.now() / 1000)
             };
-            
+
             if (contact.type === 'group') {
                 localMessage.group_id = contact.id;
                 localMessage.group_name = contact.name;
             }
-            
+
             messages.push(localMessage);
             renderMessages();
-            
+
             messageInput.value = '';
             messageInput.style.height = '80px';
         }
@@ -3203,31 +3204,31 @@
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             const host = window.location.host;
             const wsUrl = `${protocol}//${host}/sandbox/ws`;
-            
+
             ws = new WebSocket(wsUrl);
-            
+
         ws.onopen = () => {
             console.log('[Sandbox] WebSocket onopen');
             connectionStatus.textContent = '已连接';
             connectionStatus.classList.add('connected');
             connectionStatus.classList.remove('disconnected');
-            
+
             const contact = getCurrentContact();
             if (contact) {
                 messageInput.disabled = false;
                 btnSend.disabled = false;
                 loadMessages(contact.id, contact.type);
             }
-            
+
             loadCommands();
         };
-            
+
             ws.onmessage = (event) => {
                 const data = JSON.parse(event.data);
                 console.log('[Sandbox] WebSocket onmessage, type:', data.type);
                 handleWebSocketMessage(data);
             };
-            
+
             ws.onclose = () => {
                 console.log('[Sandbox] WebSocket onclose');
                 connectionStatus.textContent = '连接断开';
@@ -3237,7 +3238,7 @@
                 btnSend.disabled = true;
                 setTimeout(connectWebSocket, 3000);
             };
-            
+
             ws.onerror = () => {
                 console.error('[Sandbox] WebSocket onerror');
                 connectionStatus.textContent = '连接错误';
@@ -3254,7 +3255,7 @@
                 case 'init':
                     selfId = data.data.self_id;
                     break;
-                    
+
                 case 'messages_loaded':
                     const mContact = getCurrentContact();
                     if (mContact && data.data.contact_id === mContact.id && data.data.contact_type === mContact.type) {
@@ -3262,12 +3263,12 @@
                         renderMessages();
                     }
                     break;
-                    
+
                 case 'message':
                     const msgData = data.data;
                     const contact = getCurrentContact();
                     if (!contact) return;
-                    
+
                     if (contact.type === 'group') {
                         // 群消息：匹配 group_id
                         if (msgData.group_id === contact.id || msgData.target_id === contact.id) {
@@ -3284,13 +3285,13 @@
                         }
                     }
                     break;
-                    
+
                 case 'group_created':
                     groups.push(data.data);
                     saveGroupData();
                     renderSidebar();
                     break;
-                    
+
                 case 'group_updated':
                     const updatedGroup = data.data;
                     const idx = groups.findIndex(g => g.group_id === updatedGroup.group_id);
@@ -3300,16 +3301,17 @@
                     saveGroupData();
                     renderSidebar();
                     break;
-                    
+
                 case 'error':
                     console.error('[Sandbox] Error:', data.data.message);
                     break;
-                    
+
                 case 'api_response':
                     const apiData = data.data;
                     if (apiData.status === 'ok' && apiData.data && apiData.data.commands) {
                         commands = apiData.data.commands;
                         commandPrefix = apiData.data.prefix || '/';
+                        commandPrefixes = apiData.data.prefixes || [commandPrefix];
                     }
                     break;
             }
@@ -3322,7 +3324,7 @@
                 alert('请输入用户名');
                 return;
             }
-            
+
             currentUser = createUser(name);
             showMainApp();
         });
@@ -3381,14 +3383,14 @@
                 alert('请至少选择一个成员');
                 return;
             }
-            
+
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({
                     type: 'create_group',
                     data: { group_name: groupName, members: members }
                 }));
             }
-            
+
             document.getElementById('createGroupModal').classList.remove('show');
         });
 
@@ -3419,13 +3421,13 @@
 
         // 需要上传文件的媒体类型
         const mediaTypes = ['image', 'record', 'video', 'file'];
-        
+
         messageTypeBubbles.querySelectorAll('.type-bubble').forEach(bubble => {
             bubble.addEventListener('click', () => {
                 messageTypeBubbles.querySelectorAll('.type-bubble').forEach(b => b.classList.remove('active'));
                 bubble.classList.add('active');
                 currentMessageType = bubble.dataset.type;
-                
+
                 const placeholders = {
                     'text': '输入消息...',
                     'image': '输入图片URL...',
@@ -3437,7 +3439,7 @@
                     'markdown': '输入Markdown文本...'
                 };
                 messageInput.placeholder = placeholders[currentMessageType] || '输入消息...';
-                
+
                 // 根据消息类型显示/隐藏文件上传按钮
                 if (mediaTypes.includes(currentMessageType)) {
                     btnFileUpload.classList.add('visible');
@@ -3495,7 +3497,7 @@
         // 加载命令列表
         function loadCommands() {
             if (!ws) return;
-            
+
             ws.send(JSON.stringify({
                 type: 'call_api',
                 data: {
@@ -3517,13 +3519,21 @@
 
         // 更新自动补全内容
         function updateAutocomplete(query) {
-            if (!query || !query.startsWith(commandPrefix)) {
+            // 查找匹配的前缀（支持多个前缀）
+            let matchedPrefix = null;
+            for (const p of commandPrefixes) {
+                if (query.startsWith(p)) {
+                    matchedPrefix = p;
+                    break;
+                }
+            }
+            if (!query || !matchedPrefix) {
                 hideAutocomplete();
                 return;
             }
 
-            const searchTerm = query.substring(commandPrefix.length).toLowerCase();
-            const matches = commands.filter(cmd => 
+            const searchTerm = query.substring(matchedPrefix.length).toLowerCase();
+            const matches = commands.filter(cmd =>
                 cmd.name.toLowerCase().startsWith(searchTerm) ||
                 (cmd.aliases && cmd.aliases.some(alias => alias.toLowerCase().startsWith(searchTerm)))
             );
@@ -3535,10 +3545,10 @@
 
             autocompleteItems = matches;
             autocompleteIndex = -1;
-            
+
             autocompleteDropdown.innerHTML = matches.map((cmd, index) => `
                 <div class="autocomplete-item" data-index="${index}">
-                    <div class="autocomplete-item-name">${escapeHtml(commandPrefix + cmd.name)}</div>
+                    <div class="autocomplete-item-name">${escapeHtml(matchedPrefix + cmd.name)}</div>
                     ${cmd.help ? `<div class="autocomplete-item-desc">${escapeHtml(cmd.help)}</div>` : ''}
                     ${cmd.usage ? `<div class="autocomplete-item-usage">${escapeHtml(cmd.usage)}</div>` : ''}
                 </div>
@@ -3558,39 +3568,48 @@
         // 选择自动补全项
         function selectAutocompleteItem(index) {
             if (index < 0 || index >= autocompleteItems.length) return;
-            
+
             const cmd = autocompleteItems[index];
             const cursorPos = messageInput.selectionStart;
             const textBeforeCursor = messageInput.value.substring(0, cursorPos);
-            
-            // 找到命令前缀的位置
-            const prefixPos = textBeforeCursor.lastIndexOf(commandPrefix);
-            if (prefixPos === -1) return;
-            
+
+            // 找到匹配的命令前缀及其位置（支持多个前缀）
+            let matchedPrefix = null;
+            let prefixPos = -1;
+            for (const p of commandPrefixes) {
+                const pos = textBeforeCursor.lastIndexOf(p);
+                if (pos !== -1 && (prefixPos === -1 || pos > prefixPos)) {
+                    prefixPos = pos;
+                    matchedPrefix = p;
+                }
+            }
+            if (prefixPos === -1 || !matchedPrefix) return;
+
             // 替换命令
-            const newText = messageInput.value.substring(0, prefixPos) + commandPrefix + cmd.name + ' ';
+            const newText = messageInput.value.substring(0, prefixPos) + matchedPrefix + cmd.name + ' ';
             messageInput.value = newText + messageInput.value.substring(cursorPos);
             messageInput.focus();
-            
+
             hideAutocomplete();
         }
 
         // 修改输入框事件监听器，添加自动补全功能
         messageInput.removeEventListener('input', messageInput.inputHandler);
         messageInput.removeEventListener('keydown', messageInput.keydownHandler);
-        
+
         messageInput.inputHandler = function() {
             this.style.height = '80px';
             this.style.height = Math.min(this.scrollHeight, 200) + 'px';
-            
+
             // 命令自动补全（仅在文本模式下）
             if (currentMessageType === 'text') {
                 const cursorPos = this.selectionStart;
                 const textBeforeCursor = this.value.substring(0, cursorPos);
                 const lastWord = textBeforeCursor.split(/\s/).pop();
-                
-                // 只在输入命令时触发自动补全
-                if (lastWord.startsWith(commandPrefix)) {
+
+                // 只在输入命令时触发自动补全（检查所有前缀）
+                const hasCommandPrefix = commandPrefixes.some(p => lastWord.startsWith(p));
+                if (hasCommandPrefix) {
                     updateAutocomplete(lastWord);
                 } else {
                     hideAutocomplete();
@@ -3599,7 +3618,7 @@
                 hideAutocomplete();
             }
         };
-        
+
         messageInput.keydownHandler = function(e) {
             if (e.key === 'Enter') {
                 if (e.ctrlKey) {
@@ -3667,7 +3686,7 @@
             items.forEach((item, index) => {
                 item.classList.toggle('active', index === autocompleteIndex);
             });
-            
+
             // 滚动到选中项
             if (autocompleteIndex >= 0) {
                 const activeItem = items[autocompleteIndex];
@@ -3680,7 +3699,7 @@
         // 文件上传处理
         function handleFileUpload(file) {
             if (!file) return;
-            
+
             const reader = new FileReader();
             reader.onload = (e) => {
                 const base64 = e.target.result;
@@ -3736,11 +3755,11 @@
         function renderMessageSegmentOptimized(segment) {
             const type = segment.type || 'text';
             const data = segment.data || {};
-            
+
             switch (type) {
                 case 'text':
                     return `<span class="message-segment">${escapeHtml(data.text || '')}</span>`;
-                    
+
                 case 'image':
                     let imageUrl = data.file || data.url || '';
                     const isImageBase64 = imageUrl.startsWith('data:image') || imageUrl.match(/^[A-Za-z0-9+/]+=*$/);
@@ -3748,19 +3767,19 @@
                         imageUrl = `data:image/png;base64,${imageUrl}`;
                     }
                     return `<img src="${escapeHtml(imageUrl)}" alt="图片" class="message-segment-image" onclick="showImageModal('${escapeHtml(imageUrl)}')">`;
-                    
+
                 case 'face':
                     return `<span class="message-segment-face">😊</span>`;
-                    
+
                 case 'mention':
                     return `<span class="message-segment-mention">@${escapeHtml(data.user_id || '')}</span>`;
-                    
+
                 case 'mention_all':
                     return `<span class="message-segment-mention-all">@全体成员</span>`;
-                    
+
                 case 'reply':
                     return `<div class="message-segment-reply">回复: ${escapeHtml(data.message_id || '')}</div>`;
-                    
+
                 case 'record':
                     const recordUrl = data.file || '';
                     const uniqueId = Math.random().toString(36).substr(2, 9);
@@ -3774,7 +3793,7 @@
                             </div>
                         </div>
                     `;
-                    
+
                 case 'video':
                     let videoUrl = data.file || data.url || '';
                     const isVideoBase64 = videoUrl.startsWith('data:video') || videoUrl.match(/^[A-Za-z0-9+/]+=*$/);
@@ -3782,17 +3801,17 @@
                         videoUrl = `data:video/mp4;base64,${videoUrl}`;
                     }
                     return `<video src="${escapeHtml(videoUrl)}" controls class="message-segment-video"></video>`;
-                    
+
                 case 'dice':
                     const diceResult = data.result || '1';
                     const diceEmoji = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'][parseInt(diceResult) - 1] || '🎲';
                     return `<span class="message-segment-dice">${diceEmoji}</span>`;
-                    
+
                 case 'rps':
                     const rpsResult = data.result || '石头';
                     const rpsEmoji = {'石头': '✊', '剪刀': '✌️', '布': '✋'}[rpsResult] || '✊';
                     return `<span class="message-segment-rps">${rpsEmoji}</span>`;
-                    
+
                 case 'location':
                     const lat = data.lat || 0;
                     const lon = data.lon || 0;
@@ -3806,7 +3825,7 @@
                             </div>
                         </div>
                     `;
-                    
+
                 case 'share':
                     const shareTitle = data.title || '链接';
                     const shareContent = data.content || shareTitle;
@@ -3819,15 +3838,15 @@
                             </div>
                         </a>
                     `;
-                    
+
                 case 'html':
                     return `<div class="message-segment-html-content">${data.data || ''}</div>`;
-                    
+
                 case 'markdown':
                     const markdownText = data.data || '';
                     const renderedMarkdown = marked.parse(markdownText);
                     return `<div class="message-segment-markdown"><div class="markdown-content">${renderedMarkdown}</div></div>`;
-                    
+
                 case 'file':
                     let fileUrl = data.file || data.url || '';
                     const fileName = data.name || '未命名文件';
@@ -3842,7 +3861,7 @@
                             </div>
                         </a>
                     `;
-                    
+
                 default:
                     return `<span class="message-segment">[${escapeHtml(type)}消息]</span>`;
             }

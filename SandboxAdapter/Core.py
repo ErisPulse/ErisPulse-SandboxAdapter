@@ -5,12 +5,12 @@ import random
 import time
 import uuid
 from dataclasses import dataclass, field
-from typing import Dict, List, Any
+from typing import Any, Dict, List
 
-from fastapi import WebSocket, WebSocketDisconnect
 from ErisPulse import sdk
 from ErisPulse.Core import router
 from ErisPulse.runtime.config_schema import AdapterConfig
+from fastapi import WebSocket, WebSocketDisconnect
 
 
 @dataclass
@@ -26,12 +26,10 @@ class SandboxConfig(AdapterConfig):
 
 
 class SandboxAdapter(sdk.BaseAdapter):
-
     _platform = "sandbox"
     ConfigClass = SandboxConfig
 
     class Send(sdk.BaseAdapter.Send):
-
         def Text(self, text: str):
             task = asyncio.create_task(
                 self._adapter.call_api(
@@ -265,7 +263,9 @@ class SandboxAdapter(sdk.BaseAdapter):
             self._reset_modifiers()
             return task
 
-        def Location(self, lat: float, lon: float, title: str = None, content: str = None):
+        def Location(
+            self, lat: float, lon: float, title: str = None, content: str = None
+        ):
             location_data = {
                 "lat": lat,
                 "lon": lon,
@@ -363,6 +363,7 @@ class SandboxAdapter(sdk.BaseAdapter):
 
     def _setup_converter(self):
         from .Converter import SandboxConverter
+
         converter = SandboxConverter(self.self_id)
         return converter.convert
 
@@ -372,7 +373,9 @@ class SandboxAdapter(sdk.BaseAdapter):
             if persisted_messages:
                 self.user_messages = self._clean_for_serialization(persisted_messages)
                 total_messages = sum(len(msgs) for msgs in self.user_messages.values())
-                self.logger.info(f"从存储加载了 {total_messages} 条消息，共 {len(self.user_messages)} 个用户")
+                self.logger.info(
+                    f"从存储加载了 {total_messages} 条消息，共 {len(self.user_messages)} 个用户"
+                )
         except Exception as e:
             self.logger.warning(f"加载用户消息数据失败: {e}")
 
@@ -387,9 +390,15 @@ class SandboxAdapter(sdk.BaseAdapter):
         try:
             persisted_group_messages = self.storage.get("sandbox:group_messages", {})
             if persisted_group_messages:
-                self.group_messages = self._clean_for_serialization(persisted_group_messages)
-                total_group_msgs = sum(len(msgs) for msgs in self.group_messages.values())
-                self.logger.info(f"从存储加载了 {total_group_msgs} 条群组消息，共 {len(self.group_messages)} 个群组")
+                self.group_messages = self._clean_for_serialization(
+                    persisted_group_messages
+                )
+                total_group_msgs = sum(
+                    len(msgs) for msgs in self.group_messages.values()
+                )
+                self.logger.info(
+                    f"从存储加载了 {total_group_msgs} 条群组消息，共 {len(self.group_messages)} 个群组"
+                )
         except Exception as e:
             self.logger.warning(f"加载群组消息数据失败: {e}")
 
@@ -398,15 +407,18 @@ class SandboxAdapter(sdk.BaseAdapter):
             return data
         elif isinstance(data, bytes):
             try:
-                return data.decode('utf-8')
+                return data.decode("utf-8")
             except UnicodeDecodeError:
                 import base64
+
                 try:
-                    return base64.b64encode(data).decode('utf-8')
+                    return base64.b64encode(data).decode("utf-8")
                 except Exception:
-                    return ''
+                    return ""
         elif isinstance(data, dict):
-            return {key: self._clean_for_serialization(value) for key, value in data.items()}
+            return {
+                key: self._clean_for_serialization(value) for key, value in data.items()
+            }
         elif isinstance(data, list):
             return [self._clean_for_serialization(item) for item in data]
         else:
@@ -429,12 +441,17 @@ class SandboxAdapter(sdk.BaseAdapter):
 
             group_messages_to_save = {}
             for group_id, msgs in self.group_messages.items():
-                group_messages_to_save[group_id] = msgs[-1000:] if len(msgs) > 1000 else msgs
-            group_messages_to_save = self._clean_for_serialization(group_messages_to_save)
+                group_messages_to_save[group_id] = (
+                    msgs[-1000:] if len(msgs) > 1000 else msgs
+                )
+            group_messages_to_save = self._clean_for_serialization(
+                group_messages_to_save
+            )
             self.storage.set("sandbox:group_messages", group_messages_to_save)
         except Exception as e:
             self.logger.error(f"保存数据失败: {e}")
             import traceback
+
             self.logger.error(f"详细错误: {traceback.format_exc()}")
 
     async def call_api(self, endpoint: str, **params):
@@ -487,10 +504,12 @@ class SandboxAdapter(sdk.BaseAdapter):
 
             self._save_persisted_data()
 
-            await self._broadcast_to_web({
-                "type": "message",
-                "data": message,
-            })
+            await self._broadcast_to_web(
+                {
+                    "type": "message",
+                    "data": message,
+                }
+            )
 
             if chat_type == "group":
                 msg_index = len(self.group_messages.get(target_id, []))
@@ -504,7 +523,9 @@ class SandboxAdapter(sdk.BaseAdapter):
 
         return self.make_error(retcode=10002, message="未知的API端点")
 
-    def _build_message_segments(self, message_type, content, at_user_ids, at_all, reply_message_id):
+    def _build_message_segments(
+        self, message_type, content, at_user_ids, at_all, reply_message_id
+    ):
         message_segments = []
 
         if message_type == "text":
@@ -560,34 +581,46 @@ class SandboxAdapter(sdk.BaseAdapter):
         final_segments = []
 
         if reply_message_id:
-            final_segments.append({
-                "type": "reply",
-                "data": {"message_id": reply_message_id},
-            })
-            final_segments.append({
-                "type": "text",
-                "data": {"text": " "},
-            })
+            final_segments.append(
+                {
+                    "type": "reply",
+                    "data": {"message_id": reply_message_id},
+                }
+            )
+            final_segments.append(
+                {
+                    "type": "text",
+                    "data": {"text": " "},
+                }
+            )
 
         if at_all:
-            final_segments.append({
-                "type": "mention_all",
-                "data": {},
-            })
-            final_segments.append({
-                "type": "text",
-                "data": {"text": " "},
-            })
+            final_segments.append(
+                {
+                    "type": "mention_all",
+                    "data": {},
+                }
+            )
+            final_segments.append(
+                {
+                    "type": "text",
+                    "data": {"text": " "},
+                }
+            )
 
         for user_id in at_user_ids:
-            final_segments.append({
-                "type": "mention",
-                "data": {"user_id": user_id},
-            })
-            final_segments.append({
-                "type": "text",
-                "data": {"text": " "},
-            })
+            final_segments.append(
+                {
+                    "type": "mention",
+                    "data": {"user_id": user_id},
+                }
+            )
+            final_segments.append(
+                {
+                    "type": "text",
+                    "data": {"text": " "},
+                }
+            )
 
         final_segments.extend(message_segments)
 
@@ -616,7 +649,9 @@ class SandboxAdapter(sdk.BaseAdapter):
         self._web_connections.append(websocket)
         self.logger.info("网页客户端已连接")
 
-        await self.emit_meta("connect", self.self_id, user_name="SandboxBot", nickname="沙箱机器人")
+        await self.emit_meta(
+            "connect", self.self_id, user_name="SandboxBot", nickname="沙箱机器人"
+        )
 
         initial_data = {
             "type": "init",
@@ -640,6 +675,7 @@ class SandboxAdapter(sdk.BaseAdapter):
         except Exception as e:
             self.logger.error(f"WebSocket 处理异常: {e}")
             import traceback
+
             self.logger.error(f"详细错误: {traceback.format_exc()}")
         finally:
             heartbeat_task.cancel()
@@ -661,6 +697,7 @@ class SandboxAdapter(sdk.BaseAdapter):
         except Exception as e:
             self.logger.error(f"[Sandbox] 后台消息处理任务异常: {e}")
             import traceback
+
             self.logger.error(f"详细错误: {traceback.format_exc()}")
 
     async def _handle_web_message(self, raw_msg: str):
@@ -686,6 +723,7 @@ class SandboxAdapter(sdk.BaseAdapter):
         except Exception as e:
             self.logger.error(f"处理网页消息异常: {e}")
             import traceback
+
             self.logger.error(f"详细错误: {traceback.format_exc()}")
 
     async def _handle_send_message(self, message_data: Dict):
@@ -693,7 +731,9 @@ class SandboxAdapter(sdk.BaseAdapter):
         user_name = message_data.get("user_name", "")
         message_type = message_data.get("message_type", "private")
 
-        self.logger.info(f"[Sandbox] _handle_send_message 开始, user={user_name}({user_id}), type={message_type}")
+        self.logger.info(
+            f"[Sandbox] _handle_send_message 开始, user={user_name}({user_id}), type={message_type}"
+        )
 
         raw_event = {
             "type": "message",
@@ -727,14 +767,18 @@ class SandboxAdapter(sdk.BaseAdapter):
         onebot_event = self.convert(raw_event)
 
         if onebot_event:
-            self.logger.info(f"[Sandbox] 开始 emit 事件到模块系统: {message_data.get('message', '')[:50]}")
+            self.logger.info(
+                f"[Sandbox] 开始 emit 事件到模块系统: {message_data.get('message', '')[:50]}"
+            )
             try:
-                await asyncio.wait_for(self.sdk.adapter.emit(onebot_event), timeout=30.0)
+                await asyncio.wait_for(
+                    self.sdk.adapter.emit(onebot_event), timeout=30.0
+                )
                 self.logger.info(f"[Sandbox] emit 完成")
             except asyncio.TimeoutError:
                 pass
             except Exception as e:
-                self.logger.error(f"[Sandbox] emit 异常: {e}")
+                self.logger.error(f"[Sandbox] emit 异常: {e}", exc_info=True)
         else:
             self.logger.warning(f"[Sandbox] convert 返回 None, 跳过 emit")
 
@@ -747,14 +791,16 @@ class SandboxAdapter(sdk.BaseAdapter):
         else:
             messages = self.user_messages.get(contact_id, [])
 
-        await self._broadcast_to_web({
-            "type": "messages_loaded",
-            "data": {
-                "contact_id": contact_id,
-                "contact_type": contact_type,
-                "messages": messages,
-            },
-        })
+        await self._broadcast_to_web(
+            {
+                "type": "messages_loaded",
+                "data": {
+                    "contact_id": contact_id,
+                    "contact_type": contact_type,
+                    "messages": messages,
+                },
+            }
+        )
 
     async def _handle_get_commands(self):
         try:
@@ -772,18 +818,29 @@ class SandboxAdapter(sdk.BaseAdapter):
                     "hidden": cmd_info.get("hidden", False),
                 }
 
-                aliases = [alias for alias, main_name in command_handler.aliases.items()
-                           if main_name == cmd_name]
+                aliases = [
+                    alias
+                    for alias, main_name in command_handler.aliases.items()
+                    if main_name == cmd_name
+                ]
                 if aliases:
                     cmd_data["aliases"] = aliases
 
                 commands_list.append(cmd_data)
 
-            prefix = command_handler.prefix
+            # prefix 可能是字符串或列表，统一返回主前缀和全部前缀
+            raw_prefix = command_handler.prefix
+            if isinstance(raw_prefix, list):
+                all_prefixes = [str(p) for p in raw_prefix] if raw_prefix else ["/"]
+                main_prefix = all_prefixes[0]
+            else:
+                all_prefixes = [str(raw_prefix)]
+                main_prefix = str(raw_prefix)
 
             return self.make_response(
                 data={
-                    "prefix": prefix,
+                    "prefix": main_prefix,
+                    "prefixes": all_prefixes,
                     "commands": commands_list,
                     "total": len(commands_list),
                 },
@@ -810,25 +867,35 @@ class SandboxAdapter(sdk.BaseAdapter):
         endpoint = api_data.get("endpoint", "")
 
         if not endpoint:
-            await self._broadcast_to_web({
-                "type": "api_response",
-                "data": self.make_error(retcode=-1, message="缺少 endpoint 参数"),
-            })
+            await self._broadcast_to_web(
+                {
+                    "type": "api_response",
+                    "data": self.make_error(retcode=-1, message="缺少 endpoint 参数"),
+                }
+            )
             return
 
         try:
-            result = await self.call_api(endpoint, **{k: v for k, v in api_data.items() if k != "endpoint"})
+            result = await self.call_api(
+                endpoint, **{k: v for k, v in api_data.items() if k != "endpoint"}
+            )
 
-            await self._broadcast_to_web({
-                "type": "api_response",
-                "data": result,
-            })
+            await self._broadcast_to_web(
+                {
+                    "type": "api_response",
+                    "data": result,
+                }
+            )
         except Exception as e:
             self.logger.error(f"API 调用失败: {e}")
-            await self._broadcast_to_web({
-                "type": "api_response",
-                "data": self.make_error(retcode=-1, message=f"API 调用失败: {str(e)}"),
-            })
+            await self._broadcast_to_web(
+                {
+                    "type": "api_response",
+                    "data": self.make_error(
+                        retcode=-1, message=f"API 调用失败: {str(e)}"
+                    ),
+                }
+            )
 
     async def _handle_create_group(self, group_data: Dict):
         group_name = group_data.get("group_name", "未命名群组")
@@ -846,12 +913,16 @@ class SandboxAdapter(sdk.BaseAdapter):
         self.groups[group_id] = group_info
         self._save_persisted_data()
 
-        self.logger.info(f"[Sandbox] 创建群组: {group_name} ({group_id}), 成员: {members}")
+        self.logger.info(
+            f"[Sandbox] 创建群组: {group_name} ({group_id}), 成员: {members}"
+        )
 
-        await self._broadcast_to_web({
-            "type": "group_created",
-            "data": group_info,
-        })
+        await self._broadcast_to_web(
+            {
+                "type": "group_created",
+                "data": group_info,
+            }
+        )
 
     async def _handle_manage_group(self, manage_data: Dict):
         action = manage_data.get("action", "")
@@ -860,10 +931,12 @@ class SandboxAdapter(sdk.BaseAdapter):
         user_name = manage_data.get("user_name", "")
 
         if group_id not in self.groups:
-            await self._broadcast_to_web({
-                "type": "error",
-                "data": {"message": f"群组不存在: {group_id}"},
-            })
+            await self._broadcast_to_web(
+                {
+                    "type": "error",
+                    "data": {"message": f"群组不存在: {group_id}"},
+                }
+            )
             return
 
         group_info = self.groups[group_id]
@@ -886,7 +959,9 @@ class SandboxAdapter(sdk.BaseAdapter):
                 if onebot_event:
                     await self.sdk.adapter.emit(onebot_event)
 
-                self.logger.info(f"[Sandbox] 用户 {user_name}({user_id}) 加入群组 {group_info['group_name']}({group_id})")
+                self.logger.info(
+                    f"[Sandbox] 用户 {user_name}({user_id}) 加入群组 {group_info['group_name']}({group_id})"
+                )
 
         elif action == "remove_member":
             if user_id in group_info["members"]:
@@ -906,12 +981,16 @@ class SandboxAdapter(sdk.BaseAdapter):
                 if onebot_event:
                     await self.sdk.adapter.emit(onebot_event)
 
-                self.logger.info(f"[Sandbox] 用户 {user_name}({user_id}) 离开群组 {group_info['group_name']}({group_id})")
+                self.logger.info(
+                    f"[Sandbox] 用户 {user_name}({user_id}) 离开群组 {group_info['group_name']}({group_id})"
+                )
 
-        await self._broadcast_to_web({
-            "type": "group_updated",
-            "data": self.groups[group_id],
-        })
+        await self._broadcast_to_web(
+            {
+                "type": "group_updated",
+                "data": self.groups[group_id],
+            }
+        )
 
     async def register_routes(self):
         router.register_websocket(
@@ -923,14 +1002,18 @@ class SandboxAdapter(sdk.BaseAdapter):
         async def serve_index():
             html_file = os.path.join(os.path.dirname(__file__), "static", "index.html")
             try:
-                with open(html_file, 'r', encoding='utf-8') as f:
+                with open(html_file, "r", encoding="utf-8") as f:
                     html_content = f.read()
                 from fastapi.responses import HTMLResponse
+
                 return HTMLResponse(content=html_content, status_code=200)
             except Exception as e:
                 self.logger.error(f"读取 HTML 文件失败: {e}")
                 from fastapi.responses import HTMLResponse
-                return HTMLResponse(content=f"<h1>Error</h1><p>{str(e)}</p>", status_code=500)
+
+                return HTMLResponse(
+                    content=f"<h1>Error</h1><p>{str(e)}</p>", status_code=500
+                )
 
         router.register_http_route(
             "sandbox",
@@ -954,7 +1037,8 @@ class SandboxAdapter(sdk.BaseAdapter):
             dashboard = self.sdk.Dashboard
             dashboard.register_view(
                 id="Sandbox",
-                title="沙箱", title_en="Sandbox",
+                title="沙箱",
+                title_en="Sandbox",
                 icon_svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>',
                 iframe_url="/sandbox/",
                 group="group_tools",
@@ -970,7 +1054,11 @@ class SandboxAdapter(sdk.BaseAdapter):
             return
 
         async def _on_module_load(data):
-            if isinstance(data, dict) and data.get("module_name") == "Dashboard" and data.get("success"):
+            if (
+                isinstance(data, dict)
+                and data.get("module_name") == "Dashboard"
+                and data.get("success")
+            ):
                 self._try_register_dashboard_view()
                 self.sdk.lifecycle.unregister("module.load", _on_module_load)
 
@@ -1000,7 +1088,9 @@ class SandboxAdapter(sdk.BaseAdapter):
         port = server_config.get("port", 8000)
 
         self.logger.info("沙箱适配器启动完成")
-        self.logger.info(f"访问地址: http://{'localhost' if host == '0.0.0.0' else host}:{port}/sandbox/")
+        self.logger.info(
+            f"访问地址: http://{'localhost' if host == '0.0.0.0' else host}:{port}/sandbox/"
+        )
 
     async def shutdown(self):
         self.logger.info("正在关闭沙箱适配器...")
