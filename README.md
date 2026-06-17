@@ -1,4 +1,127 @@
-# ErisPulse 沙箱适配器 (v4.0.0)
+# ErisPulse Sandbox Adapter
+
+[English](#english) | [中文](#中文)
+
+---
+
+<a id="english"></a>
+
+## English
+
+A Sandbox adapter for the [ErisPulse](https://github.com/ErisPulse/ErisPulse/) framework, providing a web UI for debugging and simulating messages. It helps you develop and test your bot without connecting to a real bot platform.
+
+### Features
+
+- **Web UI**: Built-in browser interface for testing at `http://localhost:8000/sandbox/`
+- **Message Simulation**: Create virtual friends or group chats, then send messages as them
+- **Standard Adapter Compliance**: Fully simulates a standard adapter, emitting OneBot12 standard events
+- **Chainable Send DSL**: Supports chainable message construction (Text, Image, Face, At, Reply, etc.)
+- **Case-Insensitive Methods**: Method names can be called in any case (e.g., `Text`, `text`, `TEXT`)
+- **Raw OneBot12 Sending**: Send raw OneBot12 message segments via `Raw_ob12`
+
+> Version: v4.0.0
+
+### Installation
+
+```bash
+pip install ErisPulse-SandboxAdapter
+# or epsdk install sandbox
+```
+
+### Configuration
+
+A default configuration is generated automatically on first run.
+
+```toml
+# config.toml
+[SandboxAdapter]
+self_id = "sandbox_bot"        # Sandbox bot ID (optional, default: sandbox_bot)
+enable = true                  # Enable the adapter (optional, default: true)
+```
+
+### Sending Messages
+
+The Sandbox adapter supports the chainable message-sending DSL with the following features:
+
+#### Basic Send Methods
+
+```python
+# Send text
+adapter.Send.To("user", "123").Text("Hello")
+
+# Send image
+adapter.Send.To("user", "123").Image("image_url")
+
+# Send face/emoji
+adapter.Send.To("group", "456").Face(1)
+```
+
+#### Chainable Modifiers
+
+```python
+# @user
+adapter.Send.To("group", "456").At("user123").Text("Hello")
+
+# @all members
+adapter.Send.To("group", "456").AtAll().Text("Everyone")
+
+# Reply to a message
+adapter.Send.To("group", "456").Reply("msg_id").Text("Reply")
+
+# Chained combination
+adapter.Send.To("group", "456").At("user1").At("user2").Reply("msg_id").Text("Hello")
+```
+
+#### Raw Message Sending
+
+```python
+# Send OneBot12 format message segments
+adapter.Send.To("group", "456").Raw_ob12([
+    {"type": "text", "data": {"text": "Hello"}},
+    {"type": "image", "data": {"file": "url"}}
+])
+```
+
+#### Case-Insensitive Method Names
+
+Method names are case-insensitive:
+
+```python
+# The following calls are equivalent
+adapter.Send.To("user", "123").Text("hi")
+adapter.Send.To("user", "123").text("hi")
+adapter.Send.To("user", "123").TEXT("hi")
+```
+
+#### Unsupported Methods
+
+When an unsupported method is called, a text notice is sent automatically:
+
+```python
+adapter.Send.To("user", "123").UnsupportedMethod("data")
+# Actually sent: "[不支持的发送类型] 方法名: UnsupportedMethod, 参数: [data]"
+```
+
+### Development
+
+The Sandbox adapter can simulate a complete standard adapter, helping you develop and debug. When using it, ensure your code handles multiple adapters. After receiving an event, you can read the `platform` attribute to determine the platform. See the official ErisPulse documentation for implementation details.
+
+### Usage
+
+1. After starting the adapter, visit `http://localhost:8000/sandbox/` (port depends on your configuration)
+2. Add virtual friends or group chats in the web UI
+3. Select a chat and send a message
+4. The adapter automatically converts the message into an OneBot12 standard event and delivers it to your modules
+
+### Web UI
+
+![ErisPulse-SandboxAdapter](.github/image.png)
+
+---
+
+<a id="中文"></a>
+
+## 中文
 
 ErisPulse 的沙箱适配器，提供网页界面用于调试和模拟消息，
 可以帮助您在不接入实际机器人平台的情况下进行开发和测试。
