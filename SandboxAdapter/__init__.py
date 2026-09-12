@@ -1,1 +1,1 @@
-from .Core import SandboxAdapter
+from .Core import SandboxAdapter, __version__

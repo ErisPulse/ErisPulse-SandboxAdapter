@@ -9,12 +9,18 @@ from typing import Any, Dict, List
 
 from ErisPulse import sdk
 from ErisPulse.Core import router
-from ErisPulse.runtime.config_schema import AdapterConfig
+from ErisPulse.Core.Bases import BaseConfig
+from ErisPulse.runtime.tasks import spawn_background
+
+__version__ = "4.1.0"
+
+# 软依赖的框架最低版本（运行时检测，仅提示不强制）
+MIN_FRAMEWORK_VERSION = (2, 7, 1)
 from fastapi import WebSocket, WebSocketDisconnect
 
 
 @dataclass
-class SandboxConfig(AdapterConfig):
+class SandboxConfig(BaseConfig):
     self_id: str = field(
         default="sandbox_bot",
         metadata={"description": "沙箱机器人ID", "required": False},
@@ -28,6 +34,36 @@ class SandboxConfig(AdapterConfig):
 class SandboxAdapter(sdk.BaseAdapter):
     _platform = "sandbox"
     ConfigClass = SandboxConfig
+
+    # ==================== Api DSL（最小集） ====================
+
+    class Api(sdk.BaseAdapter.Api):
+        """Sandbox 标准 API 动作实现（最小集）"""
+
+        async def get_self_info(self) -> dict:
+            ad = self._adapter
+            return ad.make_response(
+                data={"user_id": str(getattr(ad.config, "self_id", "")), "user_name": "sandbox"}
+            )
+
+        async def get_status(self) -> dict:
+            ad = self._adapter
+            bots = [{
+                "self": {"platform": ad.platform, "user_id": str(getattr(ad.config, "self_id", ""))},
+                "online": ad._running,
+            }]
+            return ad.make_response(data={"good": bots[0]["online"], "bots": bots})
+
+        async def get_version(self) -> dict:
+            from . import __version__
+
+            return self._adapter.make_response(
+                data={"impl": "ErisPulse-SandboxAdapter", "version": __version__, "onebot_version": "12"}
+            )
+
+        async def get_supported_actions(self) -> dict:
+            actions = {"get_self_info", "get_status", "get_version", "get_supported_actions"}
+            return self._adapter.make_response(data=sorted(actions))
 
     class Send(sdk.BaseAdapter.Send):
         def Text(self, text: str):
@@ -662,7 +698,7 @@ class SandboxAdapter(sdk.BaseAdapter):
         cleaned_data = self._clean_for_serialization(initial_data)
         await websocket.send_text(json.dumps(cleaned_data, ensure_ascii=False))
 
-        heartbeat_task = asyncio.create_task(self._heartbeat_loop())
+        heartbeat_task = spawn_background(self._heartbeat_loop()) if spawn_background is not None else asyncio.create_task(self._heartbeat_loop())
 
         try:
             while True:
