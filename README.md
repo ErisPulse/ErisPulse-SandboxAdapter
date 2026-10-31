@@ -1,23 +1,19 @@
+[English](README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [Русский](README.ru.md)
+
 <div align="center">
 
-<img src=".github/assets/ErisPulseLogo.png" width="180" alt="ErisPulse SandboxAdapter" />
+<img src="https://raw.githubusercontent.com/ErisPulse/ErisPulse/main/.github/assets/ErisPulseLogo.png" width="180" alt="ErisPulse-SandboxAdapter" />
 
-# ErisPulse SandboxAdapter
+# ErisPulse-SandboxAdapter
 
-**A web UI sandbox for developing and testing your Bot — zero platform setup.**
-
-A Sandbox adapter for the ErisPulse framework. It provides a browser interface for simulating messages — create virtual friends or group chats, send messages as them, and the adapter converts them into OneBot12 standard events for your modules.
+**ErisPulse Sandbox adapter — test your bot in a web UI, zero setup**
 
 <p>
   <a href="https://pypi.org/project/ErisPulse-SandboxAdapter/"><img src="https://img.shields.io/pypi/v/ErisPulse-SandboxAdapter?style=for-the-badge&logo=pypi&logoColor=white" alt="PyPI"></a>
   <a href="https://pypi.org/project/ErisPulse-SandboxAdapter/"><img src="https://img.shields.io/badge/Python-3.10+-FFD43B?style=for-the-badge&logo=python&logoColor=blue" alt="Python"></a>
-  <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="License"></a>
-  <a href="https://github.com/ErisPulse/ErisPulse-SandboxAdapter"><img src="https://img.shields.io/github/stars/ErisPulse/ErisPulse-SandboxAdapter?style=for-the-badge&logo=github&color=brightgreen" alt="Stars"></a>
-  <a href="https://pepy.tech/project/ErisPulse-SandboxAdapter"><img src="https://img.shields.io/pepy/dt/ErisPulse-SandboxAdapter?style=for-the-badge&color=blue" alt="Downloads"></a>
-  <a href="https://github.com/ErisPulse/ErisPulse"><img src="https://img.shields.io/badge/Powered_by-ErisPulse-FF6B9D?style=for-the-badge&logo=bookstack&logoColor=white" alt="ErisPulse"></a>
+  <a href="https://github.com/ErisPulse/ErisPulse/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="License"></a>
+  <img src="https://raw.githubusercontent.com/ErisPulse/.github/main/assets/badges/adapter.svg" alt="ErisPulse">
 </p>
-
-[English](#english) | [简体中文](#中文)
 
 </div>
 
