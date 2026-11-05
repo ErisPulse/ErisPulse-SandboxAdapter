@@ -13,7 +13,7 @@ from ErisPulse.Core import router
 from ErisPulse.Core.Bases import BaseConfig
 from ErisPulse.runtime.tasks import spawn_background
 
-__version__ = "4.2.0"
+__version__ = "4.2.1"
 
 # 软依赖的框架最低版本（运行时检测，仅提示不强制）
 MIN_FRAMEWORK_VERSION = (2, 7, 1)
@@ -295,7 +295,20 @@ class SandboxAdapter(sdk.BaseAdapter):
             return task
 
         def Voice(self, file: str):
-            return self.Record(file)
+            task = asyncio.create_task(
+                self._adapter.call_api(
+                    endpoint="send_msg",
+                    target_type=self._target_type,
+                    target_id=self._target_id,
+                    message_type="audio",
+                    content=file,
+                    at_user_ids=self._at_user_ids,
+                    at_all=self._at_all,
+                    reply_message_id=self._reply_message_id,
+                )
+            )
+            self._reset_modifiers()
+            return task
 
         def Video(self, file: str):
             task = asyncio.create_task(
@@ -474,7 +487,7 @@ class SandboxAdapter(sdk.BaseAdapter):
             self._reset_modifiers()
             return task
 
-        def File(self, file: str):
+        def File(self, file: str, filename: str = None):
             task = asyncio.create_task(
                 self._adapter.call_api(
                     endpoint="send_msg",
@@ -482,6 +495,7 @@ class SandboxAdapter(sdk.BaseAdapter):
                     target_id=self._target_id,
                     message_type="file",
                     content=file,
+                    filename=filename,
                     at_user_ids=self._at_user_ids,
                     at_all=self._at_all,
                     reply_message_id=self._reply_message_id,
@@ -555,13 +569,22 @@ class SandboxAdapter(sdk.BaseAdapter):
             return data
         elif isinstance(data, bytes):
             try:
-                return data.decode("utf-8")
+                decoded = data.decode("utf-8")
+                self.logger.debug(
+                    f"_clean_for_serialization: bytes 值已按 utf-8 解码为字符串（{len(data)} 字节）"
+                )
+                return decoded
             except UnicodeDecodeError:
                 import base64
 
                 try:
-                    return base64.b64encode(data).decode("utf-8")
+                    encoded = base64.b64encode(data).decode("utf-8")
+                    self.logger.debug(
+                        f"_clean_for_serialization: bytes 值 utf-8 解码失败，已转为 base64 字符串（{len(data)} 字节）"
+                    )
+                    return encoded
                 except Exception:
+                    self.logger.debug("_clean_for_serialization: bytes 值转换失败，已替换为空字符串")
                     return ""
         elif isinstance(data, dict):
             return {
@@ -611,13 +634,14 @@ class SandboxAdapter(sdk.BaseAdapter):
             target_id = params.get("target_id", "")
             message_type = params.get("message_type", "text")
             content = params.get("content", "")
+            filename = params.get("filename", None)
 
             at_user_ids = params.get("at_user_ids", [])
             at_all = params.get("at_all", False)
             reply_message_id = params.get("reply_message_id", None)
 
             message_segments = self._build_message_segments(
-                message_type, content, at_user_ids, at_all, reply_message_id
+                message_type, content, at_user_ids, at_all, reply_message_id, filename
             )
 
             chat_type = "group" if target_type == "group" else "private"
@@ -672,7 +696,7 @@ class SandboxAdapter(sdk.BaseAdapter):
         return self.make_error(retcode=10002, message="未知的API端点")
 
     def _build_message_segments(
-        self, message_type, content, at_user_ids, at_all, reply_message_id
+        self, message_type, content, at_user_ids, at_all, reply_message_id, filename=None
     ):
         message_segments = []
 
@@ -682,12 +706,24 @@ class SandboxAdapter(sdk.BaseAdapter):
             message_segments = [{"type": "image", "data": {"file": content}}]
         elif message_type == "face":
             message_segments = [{"type": "face", "data": {"id": content}}]
+        elif message_type == "audio":
+            message_segments = [{"type": "audio", "data": {"file": content}}]
         elif message_type == "record":
             message_segments = [{"type": "record", "data": {"file": content}}]
         elif message_type == "video":
             message_segments = [{"type": "video", "data": {"file": content}}]
         elif message_type == "file":
-            message_segments = [{"type": "file", "data": {"file": content}}]
+            file_data = {"file": content}
+            if filename:
+                file_data["filename"] = filename
+            message_segments = [{"type": "file", "data": file_data}]
+        elif message_type == "raw_ob12":
+            if isinstance(content, list):
+                message_segments = list(content)
+            elif isinstance(content, dict):
+                message_segments = [content]
+            else:
+                message_segments = [{"type": "text", "data": {"text": str(content)}}]
         elif message_type == "dice":
             dice_value = random.randint(1, 6)
             message_segments = [{"type": "dice", "data": {"result": str(dice_value)}}]
