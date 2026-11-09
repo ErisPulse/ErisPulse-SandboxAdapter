@@ -186,5 +186,10 @@ class SandboxConverter:
             base_event["group_id"] = str(raw_event.get("group_id", ""))
             if "group_name" in raw_event:
                 base_event["group_name"] = str(raw_event["group_name"])
-        
+
+        # 申请标识透传：request_id / flag / id 任一存在则补齐，皆无则不合成
+        request_id = raw_event.get("request_id") or raw_event.get("flag") or raw_event.get("id")
+        if request_id:
+            base_event["request_id"] = str(request_id)
+
         return base_event

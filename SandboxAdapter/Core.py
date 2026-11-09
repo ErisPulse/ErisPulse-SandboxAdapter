@@ -13,7 +13,7 @@ from ErisPulse.Core import router
 from ErisPulse.Core.Bases import BaseConfig
 from ErisPulse.runtime.tasks import spawn_background
 
-__version__ = "4.2.1"
+__version__ = "4.2.3"
 
 # 软依赖的框架最低版本（运行时检测，仅提示不强制）
 MIN_FRAMEWORK_VERSION = (2, 7, 1)
@@ -326,6 +326,10 @@ class SandboxAdapter(sdk.BaseAdapter):
             self._reset_modifiers()
             return task
 
+        def HTML(self, html_data: str):
+            """HTML 别名：与标准 Send 方法命名（全大写）保持一致"""
+            return self.Html(html_data)
+
         def Html(self, html_data: str):
             task = asyncio.create_task(
                 self._adapter.call_api(
@@ -509,6 +513,19 @@ class SandboxAdapter(sdk.BaseAdapter):
             self._reply_message_id = None
             self._at_all = False
 
+    class Request(sdk.BaseAdapter.Request):
+        """沙箱请求操作（无真实平台，模拟审批成功便于下游联调 approve()/reject()）"""
+
+        async def _do_accept(self, **kwargs) -> dict:
+            if not self._request_id:
+                return self._adapter.make_error(retcode=34001, message="缺少 request_id")
+            return self._adapter.make_response()
+
+        async def _do_reject(self, **kwargs) -> dict:
+            if not self._request_id:
+                return self._adapter.make_error(retcode=34001, message="缺少 request_id")
+            return self._adapter.make_response()
+
     def __init__(self, sdk):
         super().__init__(sdk)
         self.storage = sdk.storage
@@ -626,6 +643,10 @@ class SandboxAdapter(sdk.BaseAdapter):
             self.logger.error(f"详细错误: {traceback.format_exc()}")
 
     async def call_api(self, endpoint: str, **params):
+        # 单账户适配器：剔除多账户字段，避免泄漏到平台参数
+        params.pop("account_id", None)
+        params.pop("_account_id", None)
+
         if endpoint == "get_commands":
             return await self._handle_get_commands()
 
